@@ -6,6 +6,14 @@ simulating an environment in which Hearthstone is played.
 
 Install the [OpenAI gym](https://gym.openai.com/docs/).
 
+Install Fireplace Hearthstone Simulator
+
+```
+git clone https://github.com/jleclanche/fireplace
+cd fireplace
+pip install .
+```
+
 Then install this package via
 
 ```
