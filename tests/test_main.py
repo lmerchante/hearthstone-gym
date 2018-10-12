@@ -8,13 +8,13 @@ import unittest
 import gym
 
 # internal modules
-import gym_banana
+import gym_hearthstone
 
 
 class Environments(unittest.TestCase):
 
     def test_env(self):
-        env = gym.make('Banana-v0')
+        env = gym.make('Hearthstone-v0')
         env.seed(0)
         env.reset()
         env.step(0)
