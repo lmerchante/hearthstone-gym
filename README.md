@@ -9,7 +9,7 @@ Install the [OpenAI gym](https://gym.openai.com/docs/).
 Then install this package via
 
 ```
-pip install -e .
+pip install gym-hearthstone
 ```
 
 ## Usage
@@ -19,12 +19,17 @@ import gym
 import gym_hearthstone
 
 env = gym.make('Hearthstone-v0')
+actions=env.get_possible_actions()
+env.step(actions[0])
 ```
-
-See https://github.com/matthiasplappert/keras-rl/tree/master/examples for some
-examples.
 
 
 ## The Environment
 
-Uses Sabberstone and random decks
+Uses Fireplace and random MAGE/WARRIOR decks -- updates to expand
+
+## With Help From 
+
+https://github.com/MartinThoma/banana-gym
+
+https://github.com/albertwujj/HearthEnv
