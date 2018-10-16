@@ -17,7 +17,8 @@ pip install .
 Then install this package via
 
 ```
-pip install gym-hearthstone
+git clone https://github.com/SethKitchen/hearthstone-gym
+python setup.py install
 ```
 
 ## Usage
