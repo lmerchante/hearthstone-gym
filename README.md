@@ -6,10 +6,19 @@ simulating an environment in which Hearthstone is played.
 
 Install the [OpenAI gym](https://gym.openai.com/docs/).
 
+Install Fireplace Hearthstone Simulator
+
+```
+git clone https://github.com/jleclanche/fireplace
+cd fireplace
+pip install .
+```
+
 Then install this package via
 
 ```
-pip install -e .
+git clone https://github.com/SethKitchen/hearthstone-gym
+python setup.py install
 ```
 
 ## Usage
@@ -19,12 +28,17 @@ import gym
 import gym_hearthstone
 
 env = gym.make('Hearthstone-v0')
+actions=env.get_possible_actions()
+env.step(actions[0])
 ```
-
-See https://github.com/matthiasplappert/keras-rl/tree/master/examples for some
-examples.
 
 
 ## The Environment
 
-Uses Sabberstone and random decks
+Uses Fireplace and random MAGE/WARRIOR decks -- updates to expand
+
+## With Help From 
+
+https://github.com/MartinThoma/banana-gym
+
+https://github.com/albertwujj/HearthEnv
