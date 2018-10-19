@@ -1,763 +1,596 @@
-import logging
-import copy
-import random
-from random import randint
-import sys
-import logging.config
-import pkg_resources
 from enum import Enum
 from fireplace import cards, exceptions, utils
 from hearthstone.enums import PlayState, Step, Mulligan, State, CardClass, Race
 from gym import spaces
 import gym
-import cfg_load
-from sty import fg, bg, ef, rs
-import numpy as np
 
-logging.disable(logging.CRITICAL)
-path = 'config.yaml'  # always use slash in packages
-filepath = pkg_resources.resource_filename('gym_hearthstone', path)
-config = cfg_load.load(filepath)
-logging.config.dictConfig(config['LOGGING'])
+IMPLEMENTED_CARDS=2795
 
-def p(*tokens, s=" ", last=False):
-	""" formats tokens into a string for printing
-	"""
-	ret = ""
-	if last:
-		for t in tokens:
-			ret += str(t) + s
-	else:
-		for t in tokens[:-1]:
-			ret += str(t) + s
-		if len(tokens) > 0:
-			ret += str(tokens[-1])
-
-	return ret
-
-def indice_subsets(s):
-	""" gets all index subsets of an iterable
-	"""
-	n= len(s)
-	i = 0
-	subsets = []
-	for i in range(1 << n):
-		subset = []
-		for j in range(n):
-			if i & (1 << j):
-				subset.append(j)
-		subsets.append(subset)
-	return subsets
-
-def hand(*cards):
-
-    ret = []
-    for i, c in enumerate(cards):
-        specials = []
-        if type(c) is Minion:
-            if c.windfury:
-                specials += "W"
-            if c.taunt:
-                specials += "T"
-            if c.divine_shield:
-                specials += "D"
-            if c.poisonous:
-                specials += "P"
-            if c.silenced:
-                specials += "S"
-            if c.frozen:
-                specials += "F"
-            if c.cannot_attack_heroes:
-                specials += "H"
-            ret.append(p(*color_powered(c), fg.blue + str(c.cost) + fg.rs, fg.li_yellow + str(c.atk) + fg.rs + "/" + fg.red + str(c.health) + fg.rs, *specials))
-        else:
-            ret.append(p(*color_powered(c), fg.blue + str(c.cost) + fg.rs))
-    return ret
-
-race_to_color = {Race.BEAST: fg.green, Race.DEMON: fg.magenta, Race.DRAGON: fg.red, Race.ELEMENTAL: fg.yellow, Race.MURLOC : fg.cyan,
-				 Race.PIRATE: fg.blue, Race.TOTEM: fg.black }
-# unused
-def color_race(*card):
-	""" colors cards according to their in-game race
-	"""
-	ret = []
-	for i in card:
-		if hasattr(i, "race") and i.race in race_to_color:
-			ret.append("" + race_to_color[i.race] + str(i) + fg.rs)
-		else:
-
-			ret.append(str(i))
-	return ret
-
-def color_powered(*cards):
-	""" colors cards if they are "powered up" (yellow in hand in official Hearthstone)
-	"""
-	ret = []
-	for i in cards:
-		if i.powered_up:
-			ret.append(fg.li_yellow + str(i) + fg.rs)
-		else:
-			ret.append(str(i))
-	return ret
-
-def color_can_attack(*cards):
-	""" colors cards green if they are can attack
-	"""
-	ret = []
-	for i in cards:
-		if i.can_attack:
-			ret.append(fg.green + str(i) + fg.rs)
-		else:
-			ret.append(str(i))
-	return ret
-
-class AutoNumber(Enum):
-	def __new__(cls):
-		value = len(cls.__members__)  # note no + 1
-		obj = object.__new__(cls)
-		obj._value_ = value
-		return obj
-
-class Move(AutoNumber):
-	end_turn = ()
-	hero_power = ()
-	minion_attack = ()
-	hero_attack = ()
-	play_card = ()
-	mulligan = ()
-	choice = ()
-
-class Info(AutoNumber):
-	player_to_move_only = ()
-	possible_moves = ()
-	random_move = ()
-
-obs_size = 263
-
-string_to_move = {"end": Move.end_turn, "heropower": Move.hero_power, "minionattack": Move.minion_attack, "heroattack": Move.hero_attack,
-				  "play": Move.play_card}
-move_to_string = {v: k for k, v in string_to_move.items()}
-cards.db.initialize()
+############################ BATTLEFIELD ######################################################################
+#                                           | OppHero  |
+# OppHand0  | OppHand1  | OppHand2  | OppHand3  | OppHand4  | OppHand5  | OppHand6  | OppHand7  | OppHand8 | OppHand9 |
+#           | OppField0 | OppField1 | OppField2 | OppField3 | OppField4 | OppField5 | OppField6 |
+#           | MyField0  | MyField1  | MyField2  | MyField3  | MyField4  | MyField5  | MyField6  |
+# MyHand0   | MyHand1   | MyHand2   | MyHand3   | MyHand4   | MyHand5   | MyHand6   | MyHand7   | MyHand8  | MyHand9  |
+#                                           | MyHero   |
+###############################################################################################################
+# Action                                                        Relative Action Number          Cumulative Action Number
+###############################################################################################################
+# Hero Power OppHero                                            10                                          1-1
+# Hero Power OppField0-6                                        1-7                                         2-8
+# Hero Power MyField0-6                                         1-7                                         9-15
+# Hero Power MyHero                                             10                                          16-16
+# Play MyHand0 on MyField0 and Use Action on OppHero            10                                          17-17
+# Play MyHand0 on MyField0 and Use Action on OppField0-6        1-7                                         18-24 
+# Play MyHand0 on MyField0 and Use Action on MyField0-6         1-7                                         25-31
+# Play MyHand0 on MyField0 and Use Action on MyHero             10                                          32-32
+# Play MyHand0 on MyField1 and Use Action ''                    1-16                                        33-48
+# Play MyHand0 on MyField2-6 ''                                 1-16,1-16,1-16,1-16,1-16                    49-64,65-80,81-96,97-112,113-128
+# Play MyHand1-6 on ''                                          1-112, 1-112, 1-112, 1-112, 1-112, 1-112    129-240, 241-352, 353-464, 465-576, 577-688, 689-800
+# Attack with MyField0 on OppHero								1-1											801-801
+# Attack with MyField0 on OppField0-6							1-7											802-808
+# Attack with MyField1 ''										1-8											809-816
+# Attack with MyField2-6 ''										1-8, 1-8, 1-8, 1-8, 1-8						817-824, 825-832, 833-840, 841-848, 849-856
+# Attack with MyHero ''											1-8											857-864
+# Mulligan MyHand0-3											1-4											865-868
+# End Turn														1-1											869-869
+###############################################################################################################
+# Observation                                                   Observation Space			Meaning
+###############################################################################################################
+# MyHero 														1-9							Druid, Hunter, Mage, Warlock, Warrior, Paladin, Shaman, Priest, Rogue
+# OppHero 														1-9 						Druid, Hunter, Mage, Warlock, Warrior, Paladin, Shaman, Priest, Rogue
+# MyHealth														0-30						Health Value
+# OppHealth														0-30						Health Value
+# MyArmor														0-500						Armor Value
+# OppArmor														0-500						Armor Value
+# MyWeaponAttack												0-500						How much damage weapon does
+# OppWeaponAttack												0-500						How much damage weapon does
+# MyWeaponDurability											0-500						How many turns I can use weapon for
+# OppWeaponDurability											0-500						How many turns Opponent can use weapon for
+# MyHeroPowerAvailable											0-1							Yes Available or Not Available
+# MyUnusedManaCrystals											0-10						How much ''money'' I can spend still
+# MyUsedManaCrystals											0-10						How much ''money'' I have already spent
+# OpponentCrystals												0-10						How many crystals opponent will have next turn
+# MyNumberOfCardsInHand											0-10						Number of Cards in My hand
+# OppNumberOfCardsInHand										0-10						Number of Cards in Opp Hand
+# MyNumberOfMinions												0-7							Number of my cards on my battlefield
+# OppNumberOfMinions											0-7							Number of cards on opponent battlefield
+# MyNumberOfSecrets												0-5							Trap cards basically
+# OppNumberOfSecrets											0-5							Trap cards basically
+# MyHand0														0-2000ish					CardId on MyHand0, 0 if empty
+# MyHand1														0-2000ish					CardId on MyHand1, 0 if empty
+# MyHand2														0-2000ish					CardId on MyHand2, 0 if empty
+# MyHand3														0-2000ish					CardId on MyHand3, 0 if empty
+# MyHand4														0-2000ish					CardId on MyHand4, 0 if empty
+# MyHand5														0-2000ish					CardId on MyHand5, 0 if empty
+# MyHand6														0-2000ish					CardId on MyHand6, 0 if empty
+# MyHand7														0-2000ish					CardId on MyHand7, 0 if empty
+# MyHand8														0-2000ish					CardId on MyHand8, 0 if empty
+# MyHand9														0-2000ish					CardId on MyHand9, 0 if empty
+# MyField0														0-2000ish					CardId on MyField0, 0 if empty
+# MyField1														0-2000ish					CardId on MyField1, 0 if empty
+# MyField2														0-2000ish					CardId on MyField2, 0 if empty
+# MyField3														0-2000ish					CardId on MyField3, 0 if empty
+# MyField4														0-2000ish					CardId on MyField4, 0 if empty
+# MyField5														0-2000ish					CardId on MyField5, 0 if empty
+# MyField6														0-2000ish					CardId on MyField6, 0 if empty
+# OppField0														0-2000ish					CardId on OppField0, 0 if empty
+# OppField1														0-2000ish					CardId on OppField1, 0 if empty
+# OppField2														0-2000ish					CardId on OppField2, 0 if empty
+# OppField3														0-2000ish					CardId on OppField3, 0 if empty
+# OppField4														0-2000ish					CardId on OppField4, 0 if empty
+# OppField5														0-2000ish					CardId on OppField5, 0 if empty
+# OppField6														0-2000ish					CardId on OppField6, 0 if empty
+# MyHand0Att													0-500  					    Attack Value on MyHand0, 0 if empty
+# MyHand1Att													0-500						Attack Value on MyHand1, 0 if empty
+# MyHand2Att													0-500						Attack Value on MyHand2, 0 if empty
+# MyHand3Att													0-500						Attack Value on MyHand3, 0 if empty
+# MyHand4Att													0-500						Attack Value on MyHand4, 0 if empty
+# MyHand5Att													0-500	      				Attack Value on MyHand5, 0 if empty
+# MyHand6Att													0-500						Attack Value on MyHand6, 0 if empty
+# MyHand7Att													0-500						Attack Value on MyHand7, 0 if empty
+# MyHand8Att													0-500						Attack Value on MyHand8, 0 if empty
+# MyHand9Att													0-500						Attack Value on MyHand9, 0 if empty
+# MyField0Att													0-500						Attack Value on MyField0, 0 if empty
+# MyField1Att													0-500						Attack Value on MyField1, 0 if empty
+# MyField2Att													0-500						Attack Value on MyField2, 0 if empty
+# MyField3Att													0-500						Attack Value on MyField3, 0 if empty
+# MyField4Att													0-500						Attack Value on MyField4, 0 if empty
+# MyField5Att													0-500						Attack Value on MyField5, 0 if empty
+# MyField6Att													0-500						Attack Value on MyField6, 0 if empty
+# OppField0Att													0-500						Attack Value on OppField0, 0 if empty
+# OppField1Att													0-500						Attack Value on OppField1, 0 if empty
+# OppField2Att													0-500						Attack Value on OppField2, 0 if empty
+# OppField3Att													0-500						Attack Value on OppField3, 0 if empty
+# OppField4Att													0-500						Attack Value on OppField4, 0 if empty
+# OppField5Att													0-500						Attack Value on OppField5, 0 if empty
+# OppField6Att													0-500						Attack Value on OppField6, 0 if empty
+# MyHand0Def													0-500  					    Defence Value on MyHand0, 0 if empty
+# MyHand1Def													0-500						Defence Value on MyHand1, 0 if empty
+# MyHand2Def													0-500						Defence Value on MyHand2, 0 if empty
+# MyHand3Def													0-500						Defence Value on MyHand3, 0 if empty
+# MyHand4Def													0-500						Defence Value on MyHand4, 0 if empty
+# MyHand5Def													0-500	      				Defence Value on MyHand5, 0 if empty
+# MyHand6Def													0-500						Defence Value on MyHand6, 0 if empty
+# MyHand7Def													0-500						Defence Value on MyHand7, 0 if empty
+# MyHand8Def													0-500						Defence Value on MyHand8, 0 if empty
+# MyHand9Def													0-500						Defence Value on MyHand9, 0 if empty
+# MyField0Def													0-500						Defence Value on MyField0, 0 if empty
+# MyField1Def													0-500						Defence Value on MyField1, 0 if empty
+# MyField2Def													0-500						Defence Value on MyField2, 0 if empty
+# MyField3Def													0-500						Defence Value on MyField3, 0 if empty
+# MyField4Def													0-500						Defence Value on MyField4, 0 if empty
+# MyField5Def													0-500						Defence Value on MyField5, 0 if empty
+# MyField6Def													0-500						Defence Value on MyField6, 0 if empty
+# OppField0Def													0-500						Defence Value on OppField0, 0 if empty
+# OppField1Def													0-500						Defence Value on OppField1, 0 if empty
+# OppField2Def													0-500						Defence Value on OppField2, 0 if empty
+# OppField3Def													0-500						Defence Value on OppField3, 0 if empty
+# OppField4Def													0-500						Defence Value on OppField4, 0 if empty
+# OppField5Def													0-500						Defence Value on OppField5, 0 if empty
+# OppField6Def													0-500						Defence Value on OppField6, 0 if empty
+# MyHand0Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1] 	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand1Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand2Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand3Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand4Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand5Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand6Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand7Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand8Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand9Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyField0Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyField1Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyField2Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyField3Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyField4Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyField5Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyField6Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# OppField0Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# OppField1Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# OppField2Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# OppField3Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# OppField4Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# OppField5Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# OppField6Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyField0CanAttack												0-500						Has not yet attacked or has windfury and can attack
+# MyField1CanAttack												0-500						Has not yet attacked or has windfury and can attack
+# MyField2CanAttack												0-500						Has not yet attacked or has windfury and can attack
+# MyField3CanAttack												0-500						Has not yet attacked or has windfury and can attack
+# MyField4CanAttack												0-500						Has not yet attacked or has windfury and can attack
+# MyField5CanAttack												0-500						Has not yet attacked or has windfury and can attack
+# MyField6CanAttack												0-500						Has not yet attacked or has windfury and can attack
+# MyHeroCanAttack												0-500						Hero can attack
 
 class HearthstoneEnv(gym.Env):
-	""" A state of the game, i.e. the game board.
     """
-	# action_space = # spaces.d
-	observation_space = spaces.Discrete(obs_size)
-
-	def __init__(self):
-		self.playerJustMoved = 2  # At the root pretend the player just moved is p2 - p1 has the first move
-		self.playerToMove = 1
-		self.players_ordered = None
-		self.hero1 = None
-		self.deck1 = None
-
-		self.hero2 = None
-		self.deck2 = None
-		self.game = None
-		self.setup_game()
-		self.lastMovePlayed = None
-
-	def clone(self):
-		""" Create a deep clone of this environment.
-        """
-		st = HearthEnv()
-		st.playerJustMoved = self.playerJustMoved
-		st.playerToMove = self.playerToMove
-		st.game = copy.deepcopy(self.game)
-		st.players_ordered = [st.game.player1, st.game.player2]
-		return st
-
-
-	def human(self):
-		""" allows creating an action from the console
-			safe to all input, go ask your friend to play your AI
-			entered indices should start from 1
-			when indexing into targets,
-			the enemy hero comes first (target 1), then their field
-		"""
-		selection = None
-		current_player = self.game.current_player
-		i = 0
-		print("Player " + str(self.playerToMove) + "'s turn: ")
-
-		if self.game.step == Step.BEGIN_MULLIGAN:
-			type = Move.mulligan
-			selection = [int(i) - 1 for i in input("Enter the indices of the cards you want to mulligan: \n").strip().split(' ')]
-			return [type, selection]
-		elif current_player.choice is not None:
-			type = Move.choice
-			selection = [int(i) - 1 for i in input("Enter the indices of the cards you want to choose: \n").strip().split(' ')]
-			return [type, selection]
-		else:
-			options = ""
-			for k in string_to_move.keys():
-				if i == len(string_to_move) - 1:
-					options += "\"" + k + "\""
-				else:
-					options += "\"" + k + "\", "
-				i += 1
-			while True:
-				input_arr = input(
-					"Enter move type (Options: " + options +
-					"), the selection index (if any), and the target index (if any): (ex. \"heropower 1\")\n").strip().split(' ')
-				if input_arr[0] not in string_to_move:
-					continue
-				type = string_to_move[input_arr[0]]
-				input_arr[1:] = [int(i) - 1 for i in input_arr[1:]]
-				if type == Move.end_turn:
-					return [type]
-				if type == Move.play_card or type == Move.minion_attack:
-					if len(input_arr) < 2:
-						continue
-					selection = input_arr[1]
-
-				if selection is None:
-					move = [type, None]
-					if len(input_arr) > 1:
-						move.append(input_arr[1])
-					else:
-						move.append(None)
-				else:
-					move = [type, selection]
-					if len(input_arr) > 2:
-						move.append(input_arr[2])
-					else:
-						move.append(None)
-				if self.__is_safe(move):
-					break
-		return self.__moveToAction(move)
-
-
-	def setup_game(self):
-		if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None:
-			self.game = utils.setup_game()
-			self.players_ordered = [self.game.player1, self.game.player2]
-			self.playerJustMoved = 2  # At the root pretend the player just moved is p2 - p1 has the first move
-			self.playerToMove = 1
-			self.lastMovePlayed = None
-			self.game.player1.choice.choose()
-			self.game.player2.choice.choose()
-
-	def step(self, action):
-		if action is None:
-			return np.zeros(obs_size), -1, -1, -1
-		done = self.__doMove(self.__actionToMove(action))
-		return self.__get_state(), self.__getReward(), done, self.playerToMove
-
-	# TODO return obs after resetting
-	def reset(self):
-		self.setup_game()
-		return np.zeros(obs_size)
-
-	def render(self, mode='human'):
-		""" prints each player's board, and the move last played
-		"""
-		out = sys.stdout
-		player1 = self.game.player1
-		player2 = self.game.player2
-		if self.game.step == Step.BEGIN_MULLIGAN:
-			self.__printMulligan(1, out)
-			self.__printMulligan(2, out)
-			out.write("\n")
-			return
-		p1out = self.__renderplayer(player1)
-		out.write(p(*p1out, s="\n", last=True))
-		out.write("\n")
-		p2out = reversed(self.__renderplayer(player2)) # reverse for the style
-		out.write(p(*p2out, s="\n", last=True))
-		out.write("\n")
-		out.write("\n")
-
-	def renderPOV(self, player_num):
-		""" prints the game state from a certain player's perspective, hiding
-			some information about the other player's board like real Hearthstone
-		"""
-		out = sys.stdout
-		out.write("\n")
-		if self.game.step == Step.BEGIN_MULLIGAN:
-			self.__printMulligan(player_num, out)
-			out.write("\n")
-			return
-		pout_oppo = self.__renderplayer(self.players_ordered[2 - player_num])
-		out.write(p(pout_oppo[0], pout_oppo[2], s='\n', last=True))
-		out.write("\n")
-		pout = self.__renderplayer(self.players_ordered[player_num - 1])
-		out.write(p(*reversed(pout), s= "\n", last=True))
-		out.write("\n")
-
-	def seed(self, seed):
-		random.seed(seed)
-
-	def __printMulligan(self, player_num, out):
-		player = self.players_ordered[player_num - 1]
-		out.write("p" + str(player_num) + " - ")
-		if player.mulligan_state == Mulligan.INPUT:
-			out.write("Before Mulligan: ")
-			out.write(p(*describe.hand(*player.choice.cards), s = ", ") + "\n")
-		else:
-			out.write("After Mulligan: ")
-			out.write(p(*describe.hand(*player.hand)) + "\n")
-
-	def __doMove(self, move, exceptionTester=[]):
-		""" Update a state by carrying out the given move.
-			Move format is [enum, index of selected card, target index, choice]
-			Returns True if game is over
-			Modified version of function from Ragowit's Fireplace fork
-        """
-		# print("move %s" % move[0])
-
-		self.lastMovePlayed = move
-
-		current_player = self.game.current_player
-
-		if not self.game.step == Step.BEGIN_MULLIGAN:
-			if current_player.playstate != PlayState.PLAYING:
-				print("Attempt to execute move while current_player is in playstate: {}, move not executed".format(current_player.playstate.name))
-				print("Attempted move: {}, on board:".format(move))
-				self.render()
-				return
-
-			if current_player is self.game.player1:
-				self.playerJustMoved = 1
-			else:
-				self.playerJustMoved = 2
-
-		try:
-			if move[0] == Move.mulligan:
-				cards = [self.__currentMulliganer().choice.cards[i] for i in move[1]]
-				self.__currentMulliganer().choice.choose(*cards)
-				self.playerToMove = self.playerJustMoved
-				self.playerJustMoved = -(self.playerJustMoved - 1) + 2
-			elif move[0] == Move.end_turn:
-				self.game.end_turn()
-			elif move[0] == Move.hero_power:
-				heropower = current_player.hero.power
-				if move[2] is None:
-					heropower.use()
-				else:
-					heropower.use(target=heropower.targets[move[2]])
-			elif move[0] == Move.play_card:
-				card = current_player.hand[move[1]]
-				args = {'target': None, 'choose': None}
-				for i, k in enumerate(args.keys()):
-					if len(move) > i + 2 and move[i+2] is not None:
-						if k == 'target':
-							args[k] = card.targets[move[i+2]]
-						elif k == 'choose':
-							args[k] = card.choose_cards[move[i+2]]
-				card.play(**args)
-			elif move[0] == Move.minion_attack:
-				minion = current_player.field[move[1]]
-				minion.attack(minion.targets[move[2]])
-			elif move[0] == Move.hero_attack:
-				hero = current_player.hero
-				hero.attack(hero.targets[move[2]])
-			elif move[0] == Move.choice:
-				current_player.choice.choose(current_player.choice.cards[move[1]])
-		except exceptions.GameOver:
-			return True
-		except Exception as e:
-			# print("Ran into exception: {} While executing move {} for player {}. Game State:".format(str(e), move, self.playerJustMoved))
-			# self.render()
-			exceptionTester.append(1) # array will eval to True
-		if not self.game.step == Step.BEGIN_MULLIGAN:
-			self.playerToMove = 1 if self.game.current_player is self.game.player1 else 2
-		return False
-
-
-	def __moveToAction(self, move):
-		""" Creates one-hot numpy array representing a move
-			Mutates the move
-		"""
-		if move is None:
-			return None
-		move[0] = move[0].value
-		for i, x in enumerate(move):
-			if x is None:
-				move[i] = 16
-		move = np.array(move, dtype=int)
-		# there are up to 16 possible targets in HS, plus one more for None case
-		action = np.eye(17)[move.reshape(-1)]
-		return action
-
-	def __actionToMove(self, action):
-		""" converts one-hot numpy array back to a move
-			Mutates the action
-		"""
-		if action is None:
-			return None
-		move = []
-		nonzero_i = np.argwhere(action)
-		for x in nonzero_i:
-			move.append((x[1] if x[1] < 10 else None) if len(x) > 1 else x[0])
-		move[0] = Move(move[0])
-		return move
-
-	def __getMoves(self):
-		""" Get all possible moves from this state.
-		    Modified version of function from Ragowit's Fireplace fork
-		"""
-
-		if self.game.ended or self.game.current_player is None or self.game.current_player.playstate != PlayState.PLAYING:
-			return []
-
-		valid_moves = []
-
-		# Mulligan
-		if self.game.step == Step.BEGIN_MULLIGAN:
-			player = self.__currentMulliganer()
-			for s in indice_subsets(player.choice.cards):
-				valid_moves.append([Move.mulligan, s])
-			return valid_moves
-
-		current_player = self.game.current_player
-		if current_player.playstate != PlayState.PLAYING:
-			return []
-
-		# Choose card
-		if current_player.choice is not None:
-			for i in range(len(current_player.choice.cards)):
-				valid_moves.append([Move.choice, i])
-			return valid_moves
-
-		else:
-			# Play card
-			for card in current_player.hand:
-				dupe = False
-				for i in range(len(valid_moves)):
-					if current_player.hand[valid_moves[i][1]].id == card.id:
-						dupe = True
-						break
-				if not dupe:
-					if card.is_playable():
-						if card.must_choose_one:
-							for i in range(len(card.choose_cards)):
-								if len(card.targets) > 0:
-									for t in range(len(card.targets)):
-										valid_moves.append(
-											[Move.play_card, current_player.hand.index(card), t, i])
-								else:
-									valid_moves.append(
-										[Move.play_card, current_player.hand.index(card), None, i])
-						elif len(card.targets) > 0:
-							for t in range(len(card.targets)):
-								valid_moves.append(
-									[Move.play_card, current_player.hand.index(card), t, None])
-						else:
-							valid_moves.append(
-								[Move.play_card, current_player.hand.index(card), None, None])
-
-			# Hero Power
-			heropower = current_player.hero.power
-			if heropower.is_usable():
-				if len(heropower.targets) > 0:
-					for t in range(len(heropower.targets)):
-						valid_moves.append([Move.hero_power, None, t])
-				else:
-					valid_moves.append([Move.hero_power, None, None])
-			# Minion Attack
-			for minion in current_player.field:
-				if minion.can_attack():
-					for t in range(len(minion.targets)):
-						valid_moves.append(
-							[Move.minion_attack, current_player.field.index(minion), t])
-
-			# Hero Attack
-			hero = current_player.hero
-			if hero.can_attack():
-				for t in range(len(hero.targets)):
-					valid_moves.append([Move.hero_attack, None, t])
-
-			valid_moves.append([Move.end_turn])
-		return valid_moves
-
-	def __fastGetRandomMove(self):
-		""" Get a random possible move from this state.
-			Move format is [enum, index of card in hand, target index]
-			Modified version of function from Ragowit's Fireplace fork
-		"""
-
-		if self.game.ended or self.game.current_player is None or self.game.current_player.playstate != PlayState.PLAYING:
-			return None
-
-		if self.game.step == Step.BEGIN_MULLIGAN:
-			player = self.__currentMulliganer()
-			mull_count = random.randint(0, len(player.choice.cards))
-			cards_to_mulligan = random.sample([i for i, x in enumerate(player.choice.cards)], mull_count)
-			return [Move.mulligan, cards_to_mulligan]
-
-		current_player = self.game.current_player
-
-		if current_player.playstate != PlayState.PLAYING:
-			return []
-		# Choose card
-		elif current_player.choice is not None:
-			card_index = randint(0, len(current_player.choice.cards) - 1)
-			return [Move.choice, card_index]
-		else:
-			chance = random.random()
-			threshold = 0
-			if chance < .02:  # 2% chance
-				return [Move.end_turn]
-
-			# 90% chance to minion attack if minion can attack
-			# Minion Attack
-			if chance < .90:
-				for minion in current_player.field:
-					if minion.can_attack():
-						t = randint(0, len(minion.targets) - 1)
-						return [Move.minion_attack, current_player.field.index(minion), t]
-
-			chance = random.random()
-			# Play card
-			if chance < .50 and len(current_player.hand) > 0: # 50% chance if no minion attack
-				card_index = random.choice(current_player.hand)
-				if card_index.is_playable():
-					if len(card_index.targets) > 0:
-						t = randint(0, len(card_index.targets) - 1)
-						valid_card = [Move.play_card, current_player.hand.index(card_index), t]
-					else:
-						valid_card = [Move.play_card, current_player.hand.index(card_index), None]
-					if card_index.must_choose_one:
-						valid_card.append(randint(0, len(card_index.choose_cards) - 1))
-					return valid_card
-			chance = random.random()
-			# Hero Attack
-			if chance < .50:
-				hero = current_player.hero
-				if hero.can_attack():
-					t = randint(0, len(hero.targets) - 1)
-					return [Move.hero_attack, None, t]
-
-			chance = random.random()
-			# Hero Power
-			if chance < .30:
-				heropower = current_player.hero.power
-				if heropower.is_usable():
-					if len(heropower.targets) > 0:
-						t = randint(0, len(heropower.targets) - 1)
-						return [Move.hero_power, None, t]
-					else:
-						return [Move.hero_power, None, None]
-
-			# if no other moves remaining
-			return [Move.end_turn]
-
-	def get_possible_actions(self):
-		actions = []
-		for move in self.__getMoves():
-			actions.append(self.__moveToAction(move))
-		return actions
-
-	def get_random_action(self):
-		move = self.__fastGetRandomMove()
-		return self.__moveToAction(move)
-
-	def __is_safe(self, move):
-		""" tests the action on a clone of the game state.
-		"""
-		copy = self.clone()
-		exceptionTester = []
-		copy.__doMove(move, exceptionTester=exceptionTester)
-		if exceptionTester:
-			return False
-		else:
-			return True
-
-	# TODO render secrets
-	def __renderplayer(self, player):
-		""" returns a length 3 string array representing a player's board
-			string 1: hero
-			string 2: hand
-			string 3: field
-		"""
-		pout = []
-
-		h_health = fg.red + str(player.hero.health) + fg.rs
-		if player.hero.armor != 0:
-			h_health += "+" + str(player.hero.armor)
-
-		h_mana = fg.blue + str(player.mana) + "/" + str(player.max_mana) + fg.rs
-
-		line_1 = p(player.hero, h_health, h_mana)
-
-
-		if player.weapon is not None:
-			line_1 += ", " + str(player.weapon.damage) + " " + str(player.weapon.durability)
-
-		pout.append(line_1)
-		hand = []
-
-		pout.append(fg.rs + "HAND: " + p(*describe.hand(*player.hand), s=", ")) # line 2
-		
-		field = []
-		for i, c in enumerate(player.field):
-			card = ""
-			specials = []
-			if c.windfury:
-				specials += "W"
-			if c.taunt:
-				specials += "T"
-			if c.divine_shield:
-				specials += "D"
-			if c.poisonous:
-				specials += "P"
-			if c.silenced:
-				specials += "S"
-			if c.frozen:
-				specials += "F"
-			if c.cannot_attack_heroes:
-				specials += "H"
-			c_health = str(c.max_health)
-			if c.max_health != c.health:
-				c_health = fg.red + str(c.health) + fg.rs + "/" + c_health
-			if player is self.game.current_player:
-				card += p(*color_can_attack(c), c.atk, c_health, *specials)
-			else:
-				card += p(c, c.atk, c_health, *specials)
-			field.append(card)
-		pout.append("FIELD: " + p(*field, s=", ")) # line 3
-		return pout
-
-	def getResult(self, player):
-		""" Get the game result from the viewpoint of player, 1 for win, 0 for loss
-		"""
-		if self.players_ordered[0].hero.health <= 0 and self.players_ordered[1].hero.health <= 0: # tie
-			return 0.5
-		elif self.players_ordered[player - 1].hero.health <= 0:  # loss
-			return 0
-		elif self.players_ordered[2 - player].hero.health <= 0:  # win
-			return 1
-		else: # game not over
-			return 0.5
-
-	def __getReward(self):
-		""" Get the current reward, from the perspective of the player who just moved
-			1 for win, -1 for loss
-			0 if game is not over
-		"""
-		player = self.playerJustMoved
-		if self.players_ordered[0].hero.health <= 0 and self.players_ordered[1].hero.health <= 0: # tie
-			return 0.1
-		elif self.players_ordered[player - 1].hero.health <= 0:  # loss
-			return -1
-		elif self.players_ordered[2 - player].hero.health <= 0:  # win
-			return 1
-		else:
-			return 0
-
-	def __currentMulliganer(self):
-		if not self.game.step == Step.BEGIN_MULLIGAN:
-			return None
-		return self.players_ordered[self.playerToMove - 1]
-
-
-	def __get_state(self):
-		"""
-        function taken from github.com/dillondaudert/Hearthstone-AI and modified
-        Args:
-            game, the current game object
-            player, the player from whose perspective to analyze the state
-        return:
-            a numpy array features extracted from the
-            supplied game.
-        """
-		game = self.game
-		player = self.players_ordered[self.playerToMove - 1]
-		p1 = player
-		p2 = player.opponent
-		s = np.zeros(obs_size, dtype=np.int32)
-
-		# TODO: Create state representation for mulligan stage
-		if game.step == Step.BEGIN_MULLIGAN or game.ended:
-			return s
-
-		# 0-9 player1 class, we subtract 1 here because the classes are from 1 to 10
-		s[p1.hero.card_class - 1] = 1
-		# 10-19 player2 class
-		s[10 + p2.hero.card_class - 1] = 1
-		i = 20
-		# 20-21: current health of current player, then opponent
-		s[i] = p1.hero.health
-		s[i + 1] = p2.hero.health
-
-		# 22: hero power usable y/n
-		s[i + 2] = p1.hero.power.is_usable() * 1
-		# 23-24: # of mana crystals for you opponent
-		s[i + 3] = p1.max_mana
-		s[i + 4] = p2.max_mana
-		# 25: # of crystals still avalible
-		s[i + 5] = p1.mana
-		# 26-31: weapon equipped y/n, pow., dur. for you, then opponent
-		s[i + 6] = 0 if p1.weapon is None else 1
-		s[i + 7] = 0 if p1.weapon is None else p1.weapon.damage
-		s[i + 8] = 0 if p1.weapon is None else p1.weapon.durability
-
-		s[i + 9] = 0 if p2.weapon is None else 1
-		s[i + 10] = 0 if p2.weapon is None else p2.weapon.damage
-		s[i + 11] = 0 if p2.weapon is None else p2.weapon.durability
-
-		# 32: number of cards in opponents hand
-		s[i + 12] = len(p2.hand)
-		# in play minions
-
-		i = 33
-		# 33-102, your monsters on the field
-		p1_minions = len(p1.field)
-		for j in range(0, 7):
-			if j < p1_minions:
-				# filled y/n, pow, tough, current health, can attack
-				s[i] = 1
-				s[i + 1] = p1.field[j].atk
-				s[i + 2] = p1.field[j].max_health
-				s[i + 3] = p1.field[j].health
-				s[i + 4] = p1.field[j].can_attack() * 1
-				# deathrattle, div shield, taunt, stealth y/n
-				s[i + 5] = p1.field[j].has_deathrattle * 1
-				s[i + 6] = p1.field[j].divine_shield * 1
-				s[i + 7] = p1.field[j].taunt * 1
-				s[i + 8] = p1.field[j].stealthed * 1
-				s[i + 9] = p1.field[j].silenced * 1
-			i += 10
-
-		# 103-172, enemy monsters on the field
-		p2_minions = len(p2.field)
-		for j in range(0, 7):
-			if j < p2_minions:
-				# filled y/n, pow, tough, current health, can attack
-				s[i] = 1
-				s[i + 1] = p2.field[j].atk
-				s[i + 2] = p2.field[j].max_health
-				s[i + 3] = p2.field[j].health
-				s[i + 4] = p2.field[j].can_attack() * 1
-				# deathrattle, div shield, taunt, stealth y/n
-				s[i + 5] = p2.field[j].has_deathrattle * 1
-				s[i + 6] = p2.field[j].divine_shield * 1
-				s[i + 7] = p2.field[j].taunt * 1
-				s[i + 8] = p2.field[j].stealthed * 1
-				s[i + 9] = p2.field[j].silenced * 1
-			i += 10
-
-		# in hand
-
-		# 173-262, your cards in hand
-		p1_hand = len(p1.hand)
-		for j in range(0, 10):
-			if j < p1_hand:
-				# card y/n
-				s[i] = 1
-				# minion y/n, attk, hp, battlecry, div shield, deathrattle, taunt
-				s[i + 1] = 1 if p1.hand[j].type == 4 else 0
-				s[i + 2] = p1.hand[j].atk if s[i + 1] == 1 else 0
-				s[i + 2] = p1.hand[j].health if s[i + 1] == 1 else 0
-				s[i + 3] = p1.hand[j].divine_shield * 1 if s[i + 1] == 1 else 0
-				s[i + 4] = p1.hand[j].has_deathrattle * 1 if s[i + 1] == 1 else 0
-				s[i + 5] = p1.hand[j].taunt * 1 if s[i + 1] == 1 else 0
-				# weapon y/n, spell y/n, cost
-				s[i + 6] = 1 if p1.hand[j].type == 7 else 0
-				s[i + 7] = 1 if p1.hand[j].type == 5 else 0
-				s[i + 8] = p1.hand[j].cost
-			i += 9
-
-		return s
+    Define a simple Banana environment.
+    The environment defines which actions can be taken at which point and
+    when the agent receives which reward.
+    """
+
+    def __init__(self):
+        self.__version__ = "0.1.0"
+        logging.info("HearthstoneEnv - Version {}".format(self.__version__))
+
+        # General variables defining the environment
+		self.curr_step = -1
+		self.action_space = spaces.Discrete(869)
+		self.observation_space = spaces.Dict(
+			{"myhero":spaces.Discrete(9)},
+			{"opphero":spaces.Discrete(9)},
+			{"myhealth":spaces.Discrete(31)},
+			{"opphealth":spaces.Discrete(31)},
+			{"myarmor":spaces.Discrete(501)},
+			{"opparmor":spaces.Discrete(501)},
+			{"myweaponatt":spaces.Discrete(501)},
+			{"oppweaponatt":spaces.Discrete(501)},
+			{"myweapondur":spaces.Discrete(501)},
+			{"oppweapondur":spaces.Discrete(501)},
+			{"myheropoweravail":spaces.Discrete(2)},
+			{"myunusedmanacrystals":spaces.Discrete(11)}
+			{"myusedmanacrystals":spaces.Discrete(11)},
+			{"oppcrystals":spaces.Discrete(11)},
+			{"mynumcardsinhand":spaces.Discrete(11)},
+			{"oppnumcardsinhand":spaces.Discrete(11)},
+			{"mynumminions":spaces.Discrete(8)},
+			{"oppnumminions":spaces.Discrete(8)},
+			{"mynumsecrets":spaces.Discrete(6)},
+			{"oppnumsecrets":spaces.Discrete(6)},
+			{"myhand0":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand1":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand2":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand3":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand4":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand5":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand6":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand7":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand8":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand9":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myfield0":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myfield1":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myfield2":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myfield3":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myfield4":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myfield5":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myfield6":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"oppfield0":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"oppfield1":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"oppfield2":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"oppfield3":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"oppfield4":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"oppfield5":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"oppfield6":spaces.Discrete(IMPLEMENTED_CARDS+1)},
+			{"myhand0att":spaces.Discrete(501)},
+			{"myhand1att":spaces.Discrete(501)},
+			{"myhand2att":spaces.Discrete(501)},
+			{"myhand3att":spaces.Discrete(501)},
+			{"myhand4att":spaces.Discrete(501)},
+			{"myhand5att":spaces.Discrete(501)},
+			{"myhand6att":spaces.Discrete(501)},
+			{"myhand7att":spaces.Discrete(501)},
+			{"myhand8att":spaces.Discrete(501)},
+			{"myhand9att":spaces.Discrete(501)},
+			{"myfield0att":spaces.Discrete(501)},
+			{"myfield1att":spaces.Discrete(501)},
+			{"myfield2att":spaces.Discrete(501)},
+			{"myfield3att":spaces.Discrete(501)},
+			{"myfield4att":spaces.Discrete(501)},
+			{"myfield5att":spaces.Discrete(501)},
+			{"myfield6att":spaces.Discrete(501)},
+			{"oppfield0att":spaces.Discrete(501)},
+			{"oppfield1att":spaces.Discrete(501)},
+			{"oppfield2att":spaces.Discrete(501)},
+			{"oppfield3att":spaces.Discrete(501)},
+			{"oppfield4att":spaces.Discrete(501)},
+			{"oppfield5att":spaces.Discrete(501)},
+			{"oppfield6att":spaces.Discrete(501)},
+			{"oppfield1att":spaces.Discrete(501)},
+			{"oppfield2att":spaces.Discrete(501)},
+			{"myhand0def":spaces.Discrete(501)},
+			{"myhand1def":spaces.Discrete(501)},
+			{"myhand2def":spaces.Discrete(501)},
+			{"myhand3def":spaces.Discrete(501)},
+			{"myhand4def":spaces.Discrete(501)},
+			{"myhand5def":spaces.Discrete(501)},
+			{"myhand6def":spaces.Discrete(501)},
+			{"myhand7def":spaces.Discrete(501)},
+			{"myhand8def":spaces.Discrete(501)},
+			{"myhand9def":spaces.Discrete(501)},
+			{"myfield0def":spaces.Discrete(501)},
+			{"myfield1def":spaces.Discrete(501)},
+			{"myfield2def":spaces.Discrete(501)},
+			{"myfield3def":spaces.Discrete(501)},
+			{"myfield4def":spaces.Discrete(501)},
+			{"myfield5def":spaces.Discrete(501)},
+			{"myfield6def":spaces.Discrete(501)},
+			{"oppfield0def":spaces.Discrete(501)},
+			{"oppfield1def":spaces.Discrete(501)},
+			{"oppfield2def":spaces.Discrete(501)},
+			{"oppfield3def":spaces.Discrete(501)},
+			{"oppfield4def":spaces.Discrete(501)},
+			{"oppfield5def":spaces.Discrete(501)},
+			{"oppfield6def":spaces.Discrete(501)},
+			{"oppfield1def":spaces.Discrete(501)},
+			{"oppfield2def":spaces.Discrete(501)},
+			{"myhand0effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myhand1effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myhand2effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myhand3effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myhand4effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myhand5effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myhand6effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myhand7effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myhand8effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myhand9effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myfield0effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myfield1effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myfield2effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myfield3effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myfield4effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myfield5effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myfield6effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"oppfield0effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"oppfield1effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"oppfield2effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"oppfield3effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"oppfield4effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"oppfield5effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"oppfield6effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"destroyanyminion",spaces.Discrete(2)},
+				{"yourheropowerdeals",spaces.Discrete(2)},
+				{"spelldamage",spaces.Discrete(2)},
+				{"overload",spaces.Discrete(2)}
+			)},
+			{"myfield0canattack":spaces.Discrete(2},
+			{"myfield1canattack":spaces.Discrete(2},
+			{"myfield2canattack":spaces.Discrete(2},
+			{"myfield3canattack":spaces.Discrete(2},
+			{"myfield4canattack":spaces.Discrete(2},
+			{"myfield5canattack":spaces.Discrete(2},
+			{"myfield6canattack":spaces.Discrete(2},
+			{"myherocanattack":spaces.Discrete(2},
+		)
