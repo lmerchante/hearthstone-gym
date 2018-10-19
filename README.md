@@ -18,7 +18,8 @@ Then install this package via
 
 ```
 git clone https://github.com/SethKitchen/hearthstone-gym
-python setup.py install
+cd hearthstone-gym
+python -m pip install -e .
 ```
 
 ## Usage
