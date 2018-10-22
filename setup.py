@@ -6,6 +6,7 @@ setup(name='gym_hearthstone',
       install_requires=['gym>=0.2.3',
                         'pandas',
                         'cfg_load',
+                        'sty'
                         ],
       author='Seth Kitchen',
       author_email='sjkyv5@mst.edu',

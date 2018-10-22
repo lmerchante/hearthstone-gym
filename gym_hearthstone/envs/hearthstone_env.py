@@ -1,10 +1,87 @@
 from enum import Enum
 from fireplace import cards, exceptions, utils
+from fireplace.utils import get_script_definition
 from hearthstone.enums import PlayState, Step, Mulligan, State, CardClass, Race
 from gym import spaces
 import gym
 
-IMPLEMENTED_CARDS=2795
+GREEN = "\033[92m"
+RED = "\033[91m"
+ENDC = "\033[0m"
+PREFIXES = {
+	GREEN: "Implemented",
+	RED: "Not implemented",
+}
+
+implemented_cards=[]
+
+SOLVED_KEYWORDS = [
+	"Windfury", "Charge", "Divine Shield", "Taunt", "Stealth", "Poisonous",
+	r"Can't be targeted by spells or Hero Powers\.",
+	r"Can't attack\.",
+	"Destroy any minion damaged by this minion.",
+	r"Your Hero Power deals \d+ extra damage.",
+	r"Spell Damage \+\d+",
+	r"Overload: \(\d+\)",
+]
+
+DUMMY_CARDS = (
+	"PlaceholderCard",  # Placeholder Card
+	"CS2_022e",  # Polymorph
+	"EX1_246e",  # Hexxed
+	"EX1_345t",  # Shadow of Nothing
+	"GAME_006",  # NOOOOOOOOOOOO
+	"LOEA04_27",  # Animated Statue
+	"Mekka4e",  # Transformed
+	"NEW1_025e",  # Bolstered (Unused)
+	"TU4c_005",  # Hidden Gnome
+	"TU4c_007",  # Mukla's Big Brother
+
+	# Dynamic buffs set by their parent
+	"CS2_236e",  # Divine Spirit
+	"EX1_304e",  # Consume (Void Terror)
+	"LOE_030e",  # Hollow (Unused)
+	"NEW1_018e",  # Treasure Crazed (Bloodsail Raider)
+)
+
+cards.db.initialize()
+for id in sorted(cards.db):
+	card = cards.db[id]
+	description = cleanup_description(card.description)
+	implemented = False
+
+	if not description:
+		# Minions without card text or with basic abilities are implemented
+		implemented = True
+	elif card.card_set == CardSet.CREDITS:
+		implemented = True
+
+	if id in DUMMY_CARDS:
+		implemented = True
+
+	carddef = get_script_definition(id)
+	if carddef:
+		implemented = True
+
+	color = GREEN if implemented else RED
+	name = color + "%s: %s" % (PREFIXES[color], card.name) + ENDC
+
+	if implemented:
+		implemented_cards.append(card)
+
+
+def cleanup_description(description):
+	ret = description
+	ret = re.sub("<i>.+</i>", "", ret)
+	ret = re.sub("(<b>|</b>)", "", ret)
+	ret = re.sub("(" + "|".join(SOLVED_KEYWORDS) + ")", "", ret)
+	ret = re.sub("<[^>]*>", "", ret)
+	exclude_chars = string.punctuation + string.whitespace
+	ret = "".join([ch for ch in ret if ch not in exclude_chars])
+	return ret
+
+
+IMPLEMENTED_CARDS=len(implemented_cards)
 
 ############################ BATTLEFIELD ######################################################################
 #                                           | OppHero  |
@@ -129,30 +206,30 @@ IMPLEMENTED_CARDS=2795
 # OppField4Def													0-500						Defence Value on OppField4, 0 if empty
 # OppField5Def													0-500						Defence Value on OppField5, 0 if empty
 # OppField6Def													0-500						Defence Value on OppField6, 0 if empty
-# MyHand0Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1] 	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyHand1Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyHand2Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyHand3Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyHand4Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyHand5Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyHand6Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyHand7Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyHand8Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyHand9Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyField0Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyField1Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyField2Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyField3Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyField4Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyField5Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# MyField6Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# OppField0Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# OppField1Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# OppField2Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# OppField3Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# OppField4Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# OppField5Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
-# OppField6Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, destroy, your hero power deals, spell damage, overload]
+# MyHand0Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1] 	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyHand1Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyHand2Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyHand3Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyHand4Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyHand5Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyHand6Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyHand7Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyHand8Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyHand9Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyField0Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyField1Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyField2Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyField3Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyField4Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyField5Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# MyField6Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# OppField0Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# OppField1Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# OppField2Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# OppField3Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# OppField4Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# OppField5Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
+# OppField6Effects							[0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1,0/1]	One hot [Windfury, Charge, Divine Shield, Taunt, Stealth, Poisonous, Cant be targeted, aura, deathrattle, frozen, silenced]
 # MyField0CanAttack												0-500						Has not yet attacked or has windfury and can attack
 # MyField1CanAttack												0-500						Has not yet attacked or has windfury and can attack
 # MyField2CanAttack												0-500						Has not yet attacked or has windfury and can attack
@@ -245,8 +322,6 @@ class HearthstoneEnv(gym.Env):
 			{"oppfield4att":spaces.Discrete(501)},
 			{"oppfield5att":spaces.Discrete(501)},
 			{"oppfield6att":spaces.Discrete(501)},
-			{"oppfield1att":spaces.Discrete(501)},
-			{"oppfield2att":spaces.Discrete(501)},
 			{"myhand0def":spaces.Discrete(501)},
 			{"myhand1def":spaces.Discrete(501)},
 			{"myhand2def":spaces.Discrete(501)},
@@ -271,8 +346,6 @@ class HearthstoneEnv(gym.Env):
 			{"oppfield4def":spaces.Discrete(501)},
 			{"oppfield5def":spaces.Discrete(501)},
 			{"oppfield6def":spaces.Discrete(501)},
-			{"oppfield1def":spaces.Discrete(501)},
-			{"oppfield2def":spaces.Discrete(501)},
 			{"myhand0effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
 				{"divineshield",spaces.Discrete(2)},
@@ -281,10 +354,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myhand1effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -294,10 +367,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myhand2effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -307,10 +380,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myhand3effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -320,10 +393,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myhand4effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -333,10 +406,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myhand5effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -346,10 +419,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myhand6effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -359,10 +432,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myhand7effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -372,10 +445,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myhand8effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -385,10 +458,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myhand9effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -398,10 +471,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myfield0effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -411,10 +484,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myfield1effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -424,10 +497,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myfield2effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -437,10 +510,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myfield3effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -450,10 +523,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myfield4effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -463,10 +536,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myfield5effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -476,10 +549,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myfield6effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -489,10 +562,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"oppfield0effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -502,10 +575,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"oppfield1effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -515,10 +588,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"oppfield2effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -528,10 +601,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"oppfield3effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -541,10 +614,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"oppfield4effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -554,10 +627,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"oppfield5effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -567,10 +640,10 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"oppfield6effects":spaces.Dict(
 				{"windfury",spaces.Discrete(2)},
@@ -580,10 +653,508 @@ class HearthstoneEnv(gym.Env):
 				{"stealth",spaces.Discrete(2)},
 				{"poisonous",spaces.Discrete(2)},
 				{"cantbetargeted",spaces.Discrete(2)},
-				{"destroyanyminion",spaces.Discrete(2)},
-				{"yourheropowerdeals",spaces.Discrete(2)},
-				{"spelldamage",spaces.Discrete(2)},
-				{"overload",spaces.Discrete(2)}
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myfield0canattack":spaces.Discrete(2},
+			{"myfield1canattack":spaces.Discrete(2},
+			{"myfield2canattack":spaces.Discrete(2},
+			{"myfield3canattack":spaces.Discrete(2},
+			{"myfield4canattack":spaces.Discrete(2},
+			{"myfield5canattack":spaces.Discrete(2},
+			{"myfield6canattack":spaces.Discrete(2},
+			{"myherocanattack":spaces.Discrete(2},
+		)
+
+		self.curr_episode = -1
+		self.action_episode_memory = []
+		self.playerJustMoved = 2 # At the root pretend the player just moved is p2 - p1 has the first move
+		self.playerToMove = 1
+		self.players_ordered = None
+		self.hero1 = random.choice(list(CardClass))
+		self.deck1 = None
+		self.hero2 = random.choice(list(CardClass))
+		self.deck2 = None
+		self.game = None
+		self.setup_game()
+		self.lastMovePlayed = None
+	
+	def setup_game(self):
+		if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None:
+			deck1 = random_draft(self.hero1)
+			deck2 = random_draft(self.hero2)
+			player1 = Player("Player1", deck1, self.hero1.default_hero)
+			player2 = Player("Player2", deck2, self.hero2.default_hero)
+
+			self.game = Game(players=(player1, player2))
+			self.game.start()
+			self.players_ordered = [self.game.player1, self.game.player2]
+			self.playerJustMoved = 2  # At the root pretend the player just moved is p2 - p1 has the first move
+			self.playerToMove = 1
+			self.lastMovePlayed = None
+	
+	def step(self, action):
+		"""
+        The agent takes a step in the environment.
+        Parameters
+        ----------
+        action : int
+        Returns
+        -------
+        ob, reward, episode_over, info : tuple
+            ob (object) :
+                an environment-specific object representing your observation of
+                the environment.
+            reward (float) :
+                amount of reward achieved by the previous action. The scale
+                varies between environments, but the goal is always to increase
+                your total reward.
+            episode_over (bool) :
+                whether it's time to reset the environment again. Most (but not
+                all) tasks are divided up into well-defined episodes, and done
+                being True indicates the episode has terminated. (For example,
+                perhaps the pole tipped too far, or you lost your last life.)
+            info (dict) :
+                 diagnostic information useful for debugging. It can sometimes
+                 be useful for learning (for example, it might contain the raw
+                 probabilities behind the environment's last state change).
+                 However, official evaluations of your agent are not allowed to
+                 use this for learning.
+        """
+        self.curr_step += 1
+        self._take_action(action)
+        reward = self._get_reward()
+        ob = self._get_state()
+        return ob, reward, reward!=0, {}
+	
+	def _get_reward(self):
+		""" Get the current reward, from the perspective of the player who just moved
+			1 for win, -1 for loss
+			0 if game is not over
+		"""
+		player = self.playerJustMoved
+		if self.players_ordered[0].hero.health <= 0 and self.players_ordered[1].hero.health <= 0: # tie
+			return 0.1
+		elif self.players_ordered[player - 1].hero.health <= 0:  # loss
+			return -1
+		elif self.players_ordered[2 - player].hero.health <= 0:  # win
+			return 1
+		else:
+			return 0
+	
+	def _get_state(self):
+		game = self.game
+		player = self.players_ordered[self.playerToMove - 1]
+		p1 = player
+		p2 = player.opponent
+		s = {
+			"myhero":p1.hero.card_class-1,
+			"opphero":p2.hero.card_class-1,
+			"myhealth":p1.hero.health,
+			"opphealth":p2.hero.health,
+			"myarmor":p1.hero.armor,
+			"opparmor":p2.hero.armor,
+			"myweaponatt":p1.weapon.damage,
+			"oppweaponatt":p2.weapon.damage,
+			"myweapondur":p1.weapon.durability,
+			"oppweapondur":p2.weapon.durability,
+			"myheropoweravail":p1.hero.power.is_usable() * 1,
+			"myunusedmanacrystals":p1.mana,
+			"myusedmanacrystals":p1.max_mana-p1.mana,
+			"oppcrystals":p2.max_mana,
+			"mynumcardsinhand":len(p1.hand),
+			"oppnumcardsinhand":len(p2.hand),
+			"mynumminions":len(p1.field),
+			"oppnumminions":len(p2.field),
+			"mynumsecrets":len(p1.secrets),
+			"oppnumsecrets":len(p2.secrets),
+			"myhand0":implemented_cards.index(p1.hand[0]),
+			"myhand1":implemented_cards.index(p1.hand[1]),
+			"myhand2":implemented_cards.index(p1.hand[2]),
+			"myhand3":implemented_cards.index(p1.hand[3]),
+			"myhand4":implemented_cards.index(p1.hand[4]),
+			"myhand5":implemented_cards.index(p1.hand[5]),
+			"myhand6":implemented_cards.index(p1.hand[6]),
+			"myhand7":implemented_cards.index(p1.hand[7]),
+			"myhand8":implemented_cards.index(p1.hand[8]),
+			"myhand9":implemented_cards.index(p1.hand[9]),
+			"myfield0":implemented_cards.index(p1.field[0]),
+			"myfield1":implemented_cards.index(p1.field[1]),
+			"myfield2":implemented_cards.index(p1.field[2]),
+			"myfield3":implemented_cards.index(p1.field[3]),
+			"myfield4":implemented_cards.index(p1.field[4]),
+			"myfield5":implemented_cards.index(p1.field[5]),
+			"myfield6":implemented_cards.index(p1.field[6]),
+			"oppfield0":implemented_cards.index(p2.field[0]),
+			"oppfield1":implemented_cards.index(p2.field[1]),
+			"oppfield2":implemented_cards.index(p2.field[2]),
+			"oppfield3":implemented_cards.index(p2.field[3]),
+			"oppfield4":implemented_cards.index(p2.field[4]),
+			"oppfield5":implemented_cards.index(p2.field[5]),
+			"oppfield6":implemented_cards.index(p2.field[6]),
+			"myhand0att":p1.hand[0].atk if 0<len(p1.hand) else 0,
+			"myhand1att":p1.hand[1].atk if 1<len(p1.hand) else 0,
+			"myhand2att":p1.hand[2].atk if 2<len(p1.hand) else 0,
+			"myhand3att":p1.hand[3].atk if 3<len(p1.hand) else 0,
+			"myhand4att":p1.hand[4].atk if 4<len(p1.hand) else 0,
+			"myhand5att":p1.hand[5].atk if 5<len(p1.hand) else 0,
+			"myhand6att":p1.hand[6].atk if 6<len(p1.hand) else 0,
+			"myhand7att":p1.hand[7].atk if 7<len(p1.hand) else 0,
+			"myhand8att":p1.hand[8].atk if 8<len(p1.hand) else 0,
+			"myhand9att":p1.hand[9].atk if 9<len(p1.hand) else 0,
+			"myfield0att":p1.field[0].atk if 0<len(p1.field) else 0,
+			"myfield1att":p1.field[1].atk if 1<len(p1.field) else 0,
+			"myfield2att":p1.field[2].atk if 2<len(p1.field) else 0,
+			"myfield3att":p1.field[3].atk if 3<len(p1.field) else 0,
+			"myfield4att":p1.field[4].atk if 4<len(p1.field) else 0,
+			"myfield5att":p1.field[5].atk if 5<len(p1.field) else 0,
+			"myfield6att":p1.field[6].atk if 6<len(p1.field) else 0,
+			"oppfield0att":p2.field[0].atk if 0<len(p2.field) else 0,
+			"oppfield1att":p2.field[0].atk if 0<len(p2.field) else 0,
+			"oppfield2att":p2.field[0].atk if 0<len(p2.field) else 0,
+			"oppfield3att":p2.field[0].atk if 0<len(p2.field) else 0,
+			"oppfield4att":p2.field[0].atk if 0<len(p2.field) else 0,
+			"oppfield5att":p2.field[0].atk if 0<len(p2.field) else 0,
+			"oppfield6att":p2.field[0].atk if 0<len(p2.field) else 0,
+			"myhand0def":p1.hand[0].health if 0<len(p1.hand) else 0,
+			"myhand1def":p1.hand[1].health if 1<len(p1.hand) else 0,
+			"myhand2def":p1.hand[2].health if 2<len(p1.hand) else 0,
+			"myhand3def":p1.hand[3].health if 3<len(p1.hand) else 0,
+			"myhand4def":p1.hand[4].health if 4<len(p1.hand) else 0,
+			"myhand5def":p1.hand[5].health if 5<len(p1.hand) else 0,
+			"myhand6def":p1.hand[6].health if 6<len(p1.hand) else 0,
+			"myhand7def":p1.hand[7].health if 7<len(p1.hand) else 0,
+			"myhand8def":p1.hand[8].health if 8<len(p1.hand) else 0,
+			"myhand9def":p1.hand[9].health if 9<len(p1.hand) else 0,
+			"myfield0def":p1.field[0].health if 0<len(p1.field) else 0,
+			"myfield1def":p1.field[1].health if 1<len(p1.field) else 0,
+			"myfield2def":p1.field[2].health if 2<len(p1.field) else 0,
+			"myfield3def":p1.field[3].health if 3<len(p1.field) else 0,
+			"myfield4def":p1.field[4].health if 4<len(p1.field) else 0,
+			"myfield5def":p1.field[5].health if 5<len(p1.field) else 0,
+			"myfield6def":p1.field[6].health if 6<len(p1.field) else 0,
+			"oppfield0def":p2.field[0].health if 0<len(p2.field) else 0,
+			"oppfield1def":p2.field[0].health if 0<len(p2.field) else 0,
+			"oppfield2def":p2.field[0].health if 0<len(p2.field) else 0,
+			"oppfield3def":p2.field[0].health if 0<len(p2.field) else 0,
+			"oppfield4def":p2.field[0].health if 0<len(p2.field) else 0,
+			"oppfield5def":p2.field[0].health if 0<len(p2.field) else 0,
+			"oppfield6def":p2.field[0].health if 0<len(p2.field) else 0,
+			"myhand0effects": {
+				"windfury", 1 if p1.hand[0].windfury else 0,
+				"divineshield", 1 if p1.hand[0].divine_shield else 0,
+				"charge", 1 if p1.hand[0].charge else 0,
+				"taunt", 1 if p1.hand[0].taunt else 0,
+				"stealth", 1 if p1.hand[0].stealthed else 0,
+				"poisonous", 1 if p1.hand[0].poisonous else 0,
+				"cantbetargeted", 1 if (p1.hand[0].cant_be_targeted_by_abilities || p1.hand[0].cant_be_targeted_by_hero_powers) else 0,
+				"aura", 1 if p1.hand[0].aura else 0,
+				"deathrattle", 1 if p1.hand[0].has_deathrattle else 0,
+				"frozen", 1 if p1.hand[0].frozen else 0,
+				"silenced", 1 if p1.hand[0].silenced else 0
+				}
+			)},
+			"myhand1effects": {
+				"windfury", 1 if p1.hand[1].windfury else 0,
+				"divineshield", 1 if p1.hand[1].divine_shield else 0,
+				"charge", 1 if p1.hand[1].charge else 0,
+				"taunt", 1 if p1.hand[1].taunt else 0,
+				"stealth", 1 if p1.hand[1].stealthed else 0,
+				"poisonous", 1 if p1.hand[1].poisonous else 0,
+				"cantbetargeted", 1 if (p1.hand[1].cant_be_targeted_by_abilities || p1.hand[1].cant_be_targeted_by_hero_powers) else 0,
+				"aura", 1 if p1.hand[1].aura else 0,
+				"deathrattle", 1 if p1.hand[1].has_deathrattle else 0,
+				"frozen", 1 if p1.hand[1].frozen else 0,
+				"silenced", 1 if p1.hand[1].silenced else 0
+				}
+			)},
+			{"myhand2effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myhand3effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myhand4effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myhand5effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myhand6effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myhand7effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myhand8effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myhand9effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myfield0effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myfield1effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myfield2effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myfield3effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myfield4effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myfield5effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"myfield6effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"oppfield0effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"oppfield1effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"oppfield2effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"oppfield3effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"oppfield4effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"oppfield5effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
+			)},
+			{"oppfield6effects":spaces.Dict(
+				{"windfury",spaces.Discrete(2)},
+				{"divineshield",spaces.Discrete(2)},
+				{"charge",spaces.Discrete(2)},
+				{"taunt",spaces.Discrete(2)},
+				{"stealth",spaces.Discrete(2)},
+				{"poisonous",spaces.Discrete(2)},
+				{"cantbetargeted",spaces.Discrete(2)},
+				{"aura",spaces.Discrete(2)},
+				{"deathrattle",spaces.Discrete(2)},
+				{"frozen",spaces.Discrete(2)},
+				{"silenced",spaces.Discrete(2)}
 			)},
 			{"myfield0canattack":spaces.Discrete(2},
 			{"myfield1canattack":spaces.Discrete(2},
