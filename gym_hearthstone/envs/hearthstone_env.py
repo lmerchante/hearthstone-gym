@@ -2,8 +2,9 @@ from enum import Enum
 from fireplace import cards, exceptions, utils
 from fireplace.player import Player
 from fireplace.game import Game
+from fireplace.deck import Deck
 from fireplace.utils import get_script_definition, random_draft
-from hearthstone.enums import PlayState, Step, Mulligan, State, CardClass, Race, CardSet
+from hearthstone.enums import PlayState, Step, Mulligan, State, CardClass, Race, CardSet, CardType
 from gym import spaces
 import gym
 import re
@@ -19,6 +20,7 @@ PREFIXES = {
 }
 
 implemented_cards = []
+unimplemented_cards = []
 
 SOLVED_KEYWORDS = [
     "Windfury", "Charge", "Divine Shield", "Taunt", "Stealth", "Poisonous",
@@ -79,10 +81,33 @@ for id in sorted(cards.db):
     name = color + "%s: %s" % (PREFIXES[color], card.name) + ENDC
 
     if implemented:
-        implemented_cards.append(card)
-
+        implemented_cards.append(card.id)
+    else:
+        unimplemented_cards.append(card.id)
 
 IMPLEMENTED_CARDS = len(implemented_cards)
+UNIMPLEMENTED_CARDS = len(unimplemented_cards)
+
+print("IMPLEMENTED CARDS: "+str(IMPLEMENTED_CARDS))
+print("UNIMPLEMENTED CARDS: "+str(UNIMPLEMENTED_CARDS))
+print(type(implemented_cards[0]))
+print(implemented_cards[0])
+
+class AutoNumber(Enum):
+	def __new__(cls):
+		value = len(cls.__members__)  # note no + 1
+		obj = object.__new__(cls)
+		obj._value_ = value
+		return obj
+
+class Move(AutoNumber):
+	end_turn = ()
+	hero_power = ()
+	minion_attack = ()
+	hero_attack = ()
+	play_card = ()
+	mulligan = ()
+	choice = ()
 
 ############################ BATTLEFIELD ######################################################################
 #                                           | OppHero  |
@@ -671,36 +696,82 @@ class HearthstoneEnv(gym.Env):
         })
         self.curr_episode=-1
         self.action_episode_memory=[]
+        self.alreadySelectedActions=[]
         self.setup_game()
 
     def reset(self):
         self.setup_game()
         return self._get_state()
-
+    
     def setup_game(self):
-        # At the root pretend the player just moved is p2 - p1 has the first move
-        self.playerJustMoved=2
-        self.playerToMove=1
-        self.players_ordered=None
-        self.hero1=random.choice(list(CardClass))
-        self.deck1=None
-        self.hero2=random.choice(list(CardClass))
-        self.deck2=None
-        self.game=None
-        self.lastMovePlayed=None
-        if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None:
-            self.deck1=random_draft(self.hero1)
-            self.deck2=random_draft(self.hero2)
-            self.player1=Player("Player1", self.deck1, self.hero1.default_hero)
-            self.player2=Player("Player2", self.deck2, self.hero2.default_hero)
+        while True:
+            try:
+                # At the root pretend the player just moved is p2 - p1 has the first move
+                self.playerJustMoved=2
+                self.playerToMove=1
+                self.players_ordered=None
+                self.hero1=random.choice(list(CardClass))
+                self.deck1=None
+                self.hero2=random.choice(list(CardClass))
+                self.deck2=None
+                self.game=None
+                self.lastMovePlayed=None
+                if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None:
+                    self.deck1=[]
+                    self.deck2=[]
+                    collection = []
+                    for card in cards.db.keys():
+                        if str(card) not in implemented_cards:
+                            continue
+                        cls = cards.db[card]
+                        if not cls.collectible:
+                            continue
+                        if cls.type == CardType.HERO:
+                            # Heroes are collectible...
+                            continue
+                        if cls.card_class and cls.card_class not in [self.hero1, CardClass.NEUTRAL]:
+                            # Play with more possibilities
+                            continue
+                        collection.append(cls)
 
-            self.game=Game(players=(self.player1, self.player2))
-            self.game.start()
-            self.players_ordered=[self.game.player1, self.game.player2]
-            # At the root pretend the player just moved is p2 - p1 has the first move
-            self.playerJustMoved=2
-            self.playerToMove=1
-            self.lastMovePlayed=None
+                    while len(self.deck1) < Deck.MAX_CARDS:
+                        card = random.choice(collection)
+                        if self.deck1.count(card.id) < card.max_count_in_deck:
+                            self.deck1.append(card.id)
+                    
+                    collection = []
+                    for card in cards.db.keys():
+                        if str(card) not in implemented_cards:
+                            continue
+                        cls = cards.db[card]
+                        if not cls.collectible:
+                            continue
+                        if cls.type == CardType.HERO:
+                            # Heroes are collectible...
+                            continue
+                        if cls.card_class and cls.card_class not in [self.hero2, CardClass.NEUTRAL]:
+                            # Play with more possibilities
+                            continue
+                        collection.append(cls)
+
+                    while len(self.deck2) < Deck.MAX_CARDS:
+                        card = random.choice(collection)
+                        if self.deck2.count(card.id) < card.max_count_in_deck:
+                            self.deck2.append(card.id)
+
+                    self.player1=Player("Player1", self.deck1, self.hero1.default_hero)
+                    self.player2=Player("Player2", self.deck2, self.hero2.default_hero)
+
+                    self.game=Game(players=(self.player1, self.player2))
+                    self.game.start()
+                    self.players_ordered=[self.game.player1, self.game.player2]
+                    # At the root pretend the player just moved is p2 - p1 has the first move
+                    self.playerJustMoved=2
+                    self.playerToMove=1
+                    self.lastMovePlayed=None
+                    return
+            except Exception as ex:
+                print("exception making decks--trying again"+str(ex))
 
     def step(self, action):
         """
@@ -739,10 +810,32 @@ class HearthstoneEnv(gym.Env):
     def _take_action(self, action):
         possible_actions=self.__getMoves(); #get valid moves
         counter=0
+        for a in self.alreadySelectedActions:
+            possible_actions.remove(a)
         while len(possible_actions)<869: #fill the entire action space by repeating some valid moves
             possible_actions.append(possible_actions[counter])
             counter=counter+1
-        self.__doMove(possible_actions[action])
+        if possible_actions[action] == Move.end_turn: #if AI is ending turn - we need to register a random move for the other/random player
+            print("doing end turn for AI")
+            self.__doMove(possible_actions[action]) #do the AI Turn to swap game to the random player's turn
+            self.alreadySelectedActions=[]
+            possible_actions=self.__getMoves() #get the random player's actions
+            action = random.choice(possible_actions) #pick a random one
+            while action != Move.end_turn: #if it's not end turn
+                print("doing single turn for rando")
+                self.alreadySelectedActions.append(action)
+                self.__doMove(action) #do it
+                possible_actions=self.__getMoves() #and get the new set of actions
+                for a in self.alreadySelectedActions:
+                    possible_actions.remove(a)
+                action=random.choice(possible_actions) #and pick a random one
+            print("doing end turn for rando")
+            self.__doMove(action) #end random player's turn
+            self.alreadySelectedActions=[]
+        else: #otherwise we just do the single AI action and keep track so its not used again
+            print("doing single action for AI"+str(possible_actions[action]))
+            self.__doMove(possible_actions[action])
+            self.alreadySelectedActions.append(possible_actions[action])
 
     def __doMove(self, move, exceptionTester=[]):
         """ Update a state by carrying out the given move.
@@ -809,21 +902,23 @@ class HearthstoneEnv(gym.Env):
         if not self.game.step == Step.BEGIN_MULLIGAN:
             self.playerToMove = 1 if self.game.current_player is self.game.player1 else 2
         return False
+    
+    def __currentMulliganer(self):
+        if not self.game.step == Step.BEGIN_MULLIGAN:
+            return None
+        return self.players_ordered[self.playerToMove - 1]
 
     def __getMoves(self):
         """ Get all possible moves from this state.
             Modified version of function from Ragowit's Fireplace fork
         """
 
-        if self.game.ended or self.game.current_player is None or self.game.current_player.playstate != PlayState.PLAYING:
-            return []
-
         valid_moves = []
 
         # Mulligan
         if self.game.step == Step.BEGIN_MULLIGAN:
             player = self.__currentMulliganer()
-            for s in indice_subsets(player.choice.cards):
+            for s in player.choice.cards:
                 valid_moves.append([Move.mulligan, s])
             return valid_moves
 
@@ -929,78 +1024,78 @@ class HearthstoneEnv(gym.Env):
             "oppnumminions": len(p2.field),
             "mynumsecrets": len(p1.secrets),
             "oppnumsecrets": len(p2.secrets),
-            "myhand0": implemented_cards.index(p1.hand[0]),
-            "myhand1": implemented_cards.index(p1.hand[1]),
-            "myhand2": implemented_cards.index(p1.hand[2]),
-            "myhand3": implemented_cards.index(p1.hand[3]),
-            "myhand4": implemented_cards.index(p1.hand[4]),
-            "myhand5": implemented_cards.index(p1.hand[5]),
-            "myhand6": implemented_cards.index(p1.hand[6]),
-            "myhand7": implemented_cards.index(p1.hand[7]),
-            "myhand8": implemented_cards.index(p1.hand[8]),
-            "myhand9": implemented_cards.index(p1.hand[9]),
-            "myfield0": implemented_cards.index(p1.field[0]),
-            "myfield1": implemented_cards.index(p1.field[1]),
-            "myfield2": implemented_cards.index(p1.field[2]),
-            "myfield3": implemented_cards.index(p1.field[3]),
-            "myfield4": implemented_cards.index(p1.field[4]),
-            "myfield5": implemented_cards.index(p1.field[5]),
-            "myfield6": implemented_cards.index(p1.field[6]),
-            "oppfield0": implemented_cards.index(p2.field[0]),
-            "oppfield1": implemented_cards.index(p2.field[1]),
-            "oppfield2": implemented_cards.index(p2.field[2]),
-            "oppfield3": implemented_cards.index(p2.field[3]),
-            "oppfield4": implemented_cards.index(p2.field[4]),
-            "oppfield5": implemented_cards.index(p2.field[5]),
-            "oppfield6": implemented_cards.index(p2.field[6]),
-            "myhand0att": p1.hand[0].atk if 0 < len(p1.hand) else 0,
-            "myhand1att": p1.hand[1].atk if 1 < len(p1.hand) else 0,
-            "myhand2att": p1.hand[2].atk if 2 < len(p1.hand) else 0,
-            "myhand3att": p1.hand[3].atk if 3 < len(p1.hand) else 0,
-            "myhand4att": p1.hand[4].atk if 4 < len(p1.hand) else 0,
-            "myhand5att": p1.hand[5].atk if 5 < len(p1.hand) else 0,
-            "myhand6att": p1.hand[6].atk if 6 < len(p1.hand) else 0,
-            "myhand7att": p1.hand[7].atk if 7 < len(p1.hand) else 0,
-            "myhand8att": p1.hand[8].atk if 8 < len(p1.hand) else 0,
-            "myhand9att": p1.hand[9].atk if 9 < len(p1.hand) else 0,
-            "myfield0att": p1.field[0].atk if 0 < len(p1.field) else 0,
-            "myfield1att": p1.field[1].atk if 1 < len(p1.field) else 0,
-            "myfield2att": p1.field[2].atk if 2 < len(p1.field) else 0,
-            "myfield3att": p1.field[3].atk if 3 < len(p1.field) else 0,
-            "myfield4att": p1.field[4].atk if 4 < len(p1.field) else 0,
-            "myfield5att": p1.field[5].atk if 5 < len(p1.field) else 0,
-            "myfield6att": p1.field[6].atk if 6 < len(p1.field) else 0,
-            "oppfield0att": p2.field[0].atk if 0 < len(p2.field) else 0,
-            "oppfield1att": p2.field[0].atk if 0 < len(p2.field) else 0,
-            "oppfield2att": p2.field[0].atk if 0 < len(p2.field) else 0,
-            "oppfield3att": p2.field[0].atk if 0 < len(p2.field) else 0,
-            "oppfield4att": p2.field[0].atk if 0 < len(p2.field) else 0,
-            "oppfield5att": p2.field[0].atk if 0 < len(p2.field) else 0,
-            "oppfield6att": p2.field[0].atk if 0 < len(p2.field) else 0,
-            "myhand0def": p1.hand[0].health if 0 < len(p1.hand) else 0,
-            "myhand1def": p1.hand[1].health if 1 < len(p1.hand) else 0,
-            "myhand2def": p1.hand[2].health if 2 < len(p1.hand) else 0,
-            "myhand3def": p1.hand[3].health if 3 < len(p1.hand) else 0,
-            "myhand4def": p1.hand[4].health if 4 < len(p1.hand) else 0,
-            "myhand5def": p1.hand[5].health if 5 < len(p1.hand) else 0,
-            "myhand6def": p1.hand[6].health if 6 < len(p1.hand) else 0,
-            "myhand7def": p1.hand[7].health if 7 < len(p1.hand) else 0,
-            "myhand8def": p1.hand[8].health if 8 < len(p1.hand) else 0,
-            "myhand9def": p1.hand[9].health if 9 < len(p1.hand) else 0,
-            "myfield0def": p1.field[0].health if 0 < len(p1.field) else 0,
-            "myfield1def": p1.field[1].health if 1 < len(p1.field) else 0,
-            "myfield2def": p1.field[2].health if 2 < len(p1.field) else 0,
-            "myfield3def": p1.field[3].health if 3 < len(p1.field) else 0,
-            "myfield4def": p1.field[4].health if 4 < len(p1.field) else 0,
-            "myfield5def": p1.field[5].health if 5 < len(p1.field) else 0,
-            "myfield6def": p1.field[6].health if 6 < len(p1.field) else 0,
-            "oppfield0def": p2.field[0].health if 0 < len(p2.field) else 0,
-            "oppfield1def": p2.field[0].health if 0 < len(p2.field) else 0,
-            "oppfield2def": p2.field[0].health if 0 < len(p2.field) else 0,
-            "oppfield3def": p2.field[0].health if 0 < len(p2.field) else 0,
-            "oppfield4def": p2.field[0].health if 0 < len(p2.field) else 0,
-            "oppfield5def": p2.field[0].health if 0 < len(p2.field) else 0,
-            "oppfield6def": p2.field[0].health if 0 < len(p2.field) else 0,
+            "myhand0": implemented_cards.index(p1.hand[0]) if 0 < len(p1.hand) else 0,
+            "myhand1": implemented_cards.index(p1.hand[1]) if 1 < len(p1.hand) else 0,
+            "myhand2": implemented_cards.index(p1.hand[2]) if 2 < len(p1.hand) else 0,
+            "myhand3": implemented_cards.index(p1.hand[3]) if 3 < len(p1.hand) else 0,
+            "myhand4": implemented_cards.index(p1.hand[4]) if 4 < len(p1.hand) else 0,
+            "myhand5": implemented_cards.index(p1.hand[5]) if 5 < len(p1.hand) else 0,
+            "myhand6": implemented_cards.index(p1.hand[6]) if 6 < len(p1.hand) else 0,
+            "myhand7": implemented_cards.index(p1.hand[7]) if 7 < len(p1.hand) else 0,
+            "myhand8": implemented_cards.index(p1.hand[8]) if 8 < len(p1.hand) else 0,
+            "myhand9": implemented_cards.index(p1.hand[9]) if 9 < len(p1.hand) else 0,
+            "myfield0": implemented_cards.index(p1.field[0]) if 0 < len(p1.field) else 0,
+            "myfield1": implemented_cards.index(p1.field[1]) if 1 < len(p1.field) else 0,
+            "myfield2": implemented_cards.index(p1.field[2]) if 2 < len(p1.field) else 0,
+            "myfield3": implemented_cards.index(p1.field[3]) if 3 < len(p1.field) else 0,
+            "myfield4": implemented_cards.index(p1.field[4]) if 4 < len(p1.field) else 0,
+            "myfield5": implemented_cards.index(p1.field[5]) if 5 < len(p1.field) else 0,
+            "myfield6": implemented_cards.index(p1.field[6]) if 6 < len(p1.field) else 0,
+            "oppfield0": implemented_cards.index(p2.field[0]) if 0 < len(p2.field) else 0,
+            "oppfield1": implemented_cards.index(p2.field[1]) if 1 < len(p2.field) else 0,
+            "oppfield2": implemented_cards.index(p2.field[2]) if 2 < len(p2.field) else 0,
+            "oppfield3": implemented_cards.index(p2.field[3]) if 3 < len(p2.field) else 0,
+            "oppfield4": implemented_cards.index(p2.field[4]) if 4 < len(p2.field) else 0,
+            "oppfield5": implemented_cards.index(p2.field[5]) if 5 < len(p2.field) else 0,
+            "oppfield6": implemented_cards.index(p2.field[6]) if 6 < len(p2.field) else 0,
+            "myhand0att": p1.hand[0].atk if 0 < len(p1.hand) and p1.hand[0].type != 7 and p1.hand[0].type !=5 else 0,
+            "myhand1att": p1.hand[1].atk if 1 < len(p1.hand) and p1.hand[1].type != 7 and p1.hand[1].type !=5 else 0,
+            "myhand2att": p1.hand[2].atk if 2 < len(p1.hand) and p1.hand[2].type != 7 and p1.hand[2].type !=5 else 0,
+            "myhand3att": p1.hand[3].atk if 3 < len(p1.hand) and p1.hand[3].type != 7 and p1.hand[3].type !=5 else 0,
+            "myhand4att": p1.hand[4].atk if 4 < len(p1.hand) and p1.hand[4].type != 7 and p1.hand[4].type !=5 else 0,
+            "myhand5att": p1.hand[5].atk if 5 < len(p1.hand) and p1.hand[5].type != 7 and p1.hand[5].type !=5 else 0,
+            "myhand6att": p1.hand[6].atk if 6 < len(p1.hand) and p1.hand[6].type != 7 and p1.hand[6].type !=5 else 0,
+            "myhand7att": p1.hand[7].atk if 7 < len(p1.hand) and p1.hand[7].type != 7 and p1.hand[7].type !=5 else 0,
+            "myhand8att": p1.hand[8].atk if 8 < len(p1.hand) and p1.hand[8].type != 7 and p1.hand[8].type !=5 else 0,
+            "myhand9att": p1.hand[9].atk if 9 < len(p1.hand) and p1.hand[9].type != 7 and p1.hand[9].type !=5 else 0,
+            "myfield0att": p1.field[0].atk if 0 < len(p1.field) and p1.field[0].type != 7 and p1.field[0].type !=5 else 0,
+            "myfield1att": p1.field[1].atk if 1 < len(p1.field) and p1.field[1].type != 7 and p1.field[1].type !=5 else 0,
+            "myfield2att": p1.field[2].atk if 2 < len(p1.field) and p1.field[2].type != 7 and p1.field[2].type !=5 else 0,
+            "myfield3att": p1.field[3].atk if 3 < len(p1.field) and p1.field[3].type != 7 and p1.field[3].type !=5 else 0,
+            "myfield4att": p1.field[4].atk if 4 < len(p1.field) and p1.field[4].type != 7 and p1.field[4].type !=5 else 0,
+            "myfield5att": p1.field[5].atk if 5 < len(p1.field) and p1.field[5].type != 7 and p1.field[5].type !=5 else 0,
+            "myfield6att": p1.field[6].atk if 6 < len(p1.field) and p1.field[6].type != 7 and p1.field[6].type !=5 else 0,
+            "oppfield0att": p2.field[0].atk if 0 < len(p2.field) and p2.field[0].type != 7 and p2.field[0].type !=5 else 0,
+            "oppfield1att": p2.field[1].atk if 1 < len(p2.field) and p2.field[1].type != 7 and p2.field[1].type !=5 else 0,
+            "oppfield2att": p2.field[2].atk if 2 < len(p2.field) and p2.field[2].type != 7 and p2.field[2].type !=5 else 0,
+            "oppfield3att": p2.field[3].atk if 3 < len(p2.field) and p2.field[3].type != 7 and p2.field[3].type !=5 else 0,
+            "oppfield4att": p2.field[4].atk if 4 < len(p2.field) and p2.field[4].type != 7 and p2.field[4].type !=5 else 0,
+            "oppfield5att": p2.field[5].atk if 5 < len(p2.field) and p2.field[5].type != 7 and p2.field[5].type !=5 else 0,
+            "oppfield6att": p2.field[6].atk if 6 < len(p2.field) and p2.field[6].type != 7 and p2.field[6].type !=5 else 0,
+            "myhand0def": p1.hand[0].health if 0 < len(p1.hand) and p1.hand[0].type != 7 and p1.hand[0].type !=5 else 0,
+            "myhand1def": p1.hand[1].health if 1 < len(p1.hand) and p1.hand[1].type != 7 and p1.hand[1].type !=5 else 0,
+            "myhand2def": p1.hand[2].health if 2 < len(p1.hand) and p1.hand[2].type != 7 and p1.hand[2].type !=5 else 0,
+            "myhand3def": p1.hand[3].health if 3 < len(p1.hand) and p1.hand[3].type != 7 and p1.hand[3].type !=5 else 0,
+            "myhand4def": p1.hand[4].health if 4 < len(p1.hand) and p1.hand[4].type != 7 and p1.hand[4].type !=5 else 0,
+            "myhand5def": p1.hand[5].health if 5 < len(p1.hand) and p1.hand[5].type != 7 and p1.hand[5].type !=5 else 0,
+            "myhand6def": p1.hand[6].health if 6 < len(p1.hand) and p1.hand[6].type != 7 and p1.hand[6].type !=5 else 0,
+            "myhand7def": p1.hand[7].health if 7 < len(p1.hand) and p1.hand[7].type != 7 and p1.hand[7].type !=5 else 0,
+            "myhand8def": p1.hand[8].health if 8 < len(p1.hand) and p1.hand[8].type != 7 and p1.hand[8].type !=5 else 0,
+            "myhand9def": p1.hand[9].health if 9 < len(p1.hand) and p1.hand[9].type != 7 and p1.hand[9].type !=5 else 0,
+            "myfield0def": p1.field[0].health if 0 < len(p1.field) and p1.field[0].type != 7 and p1.field[0].type !=5 else 0,
+            "myfield1def": p1.field[1].health if 1 < len(p1.field) and p1.field[1].type != 7 and p1.field[1].type !=5 else 0,
+            "myfield2def": p1.field[2].health if 2 < len(p1.field) and p1.field[2].type != 7 and p1.field[2].type !=5 else 0,
+            "myfield3def": p1.field[3].health if 3 < len(p1.field) and p1.field[3].type != 7 and p1.field[3].type !=5 else 0,
+            "myfield4def": p1.field[4].health if 4 < len(p1.field) and p1.field[4].type != 7 and p1.field[4].type !=5 else 0,
+            "myfield5def": p1.field[5].health if 5 < len(p1.field) and p1.field[5].type != 7 and p1.field[5].type !=5 else 0,
+            "myfield6def": p1.field[6].health if 6 < len(p1.field) and p1.field[6].type != 7 and p1.field[6].type !=5 else 0,
+            "oppfield0def": p2.field[0].health if 0 < len(p2.field) and p2.field[0].type != 7 and p2.field[0].type !=5 else 0,
+            "oppfield1def": p2.field[1].health if 1 < len(p2.field) and p2.field[1].type != 7 and p2.field[1].type !=5 else 0,
+            "oppfield2def": p2.field[2].health if 2 < len(p2.field) and p2.field[2].type != 7 and p2.field[2].type !=5 else 0,
+            "oppfield3def": p2.field[3].health if 3 < len(p2.field) and p2.field[3].type != 7 and p2.field[3].type !=5 else 0,
+            "oppfield4def": p2.field[4].health if 4 < len(p2.field) and p2.field[4].type != 7 and p2.field[4].type !=5 else 0,
+            "oppfield5def": p2.field[5].health if 5 < len(p2.field) and p2.field[5].type != 7 and p2.field[5].type !=5 else 0,
+            "oppfield6def": p2.field[6].health if 6 < len(p2.field) and p2.field[6].type != 7 and p2.field[6].type !=5 else 0,
             "myhand0effects": {
                 "windfury", 1 if 0 < len(p1.hand) and p1.hand[0].windfury else 0,
                 "divineshield", 1 if 0 < len(p1.hand) and p1.hand[0].divine_shield else 0,
