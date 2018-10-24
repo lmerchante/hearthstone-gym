@@ -1,84 +1,85 @@
 from enum import Enum
 from fireplace import cards, exceptions, utils
-from fireplace.utils import get_script_definition
-from hearthstone.enums import PlayState, Step, Mulligan, State, CardClass, Race
+from fireplace.player import Player
+from fireplace.game import Game
+from fireplace.utils import get_script_definition, random_draft
+from hearthstone.enums import PlayState, Step, Mulligan, State, CardClass, Race, CardSet
 from gym import spaces
 import gym
+import re
+import string
+import random
 
 GREEN = "\033[92m"
 RED = "\033[91m"
 ENDC = "\033[0m"
 PREFIXES = {
-	GREEN: "Implemented",
-	RED: "Not implemented",
+    GREEN: "Implemented",
+    RED: "Not implemented",
 }
 
 implemented_cards = []
 
 SOLVED_KEYWORDS = [
-	"Windfury", "Charge", "Divine Shield", "Taunt", "Stealth", "Poisonous",
-	r"Can't be targeted by spells or Hero Powers\.",
-	r"Can't attack\.",
-	"Destroy any minion damaged by this minion.",
-	r"Your Hero Power deals \d+ extra damage.",
-	r"Spell Damage \+\d+",
-	r"Overload: \(\d+\)",
+    "Windfury", "Charge", "Divine Shield", "Taunt", "Stealth", "Poisonous",
+    r"Can't be targeted by spells or Hero Powers\.",
+    r"Can't attack\.",
+    "Destroy any minion damaged by this minion.",
+    r"Your Hero Power deals \d+ extra damage.",
+    r"Spell Damage \+\d+",
+    r"Overload: \(\d+\)",
 ]
 
 DUMMY_CARDS = (
-	"PlaceholderCard",  # Placeholder Card
-	"CS2_022e",  # Polymorph
-	"EX1_246e",  # Hexxed
-	"EX1_345t",  # Shadow of Nothing
-	"GAME_006",  # NOOOOOOOOOOOO
-	"LOEA04_27",  # Animated Statue
-	"Mekka4e",  # Transformed
-	"NEW1_025e",  # Bolstered (Unused)
-	"TU4c_005",  # Hidden Gnome
-	"TU4c_007",  # Mukla's Big Brother
+    "PlaceholderCard",  # Placeholder Card
+    "CS2_022e",  # Polymorph
+    "EX1_246e",  # Hexxed
+    "EX1_345t",  # Shadow of Nothing
+    "GAME_006",  # NOOOOOOOOOOOO
+    "LOEA04_27",  # Animated Statue
+    "Mekka4e",  # Transformed
+    "NEW1_025e",  # Bolstered (Unused)
+    "TU4c_005",  # Hidden Gnome
+    "TU4c_007",  # Mukla's Big Brother
 
-	# Dynamic buffs set by their parent
-	"CS2_236e",  # Divine Spirit
-	"EX1_304e",  # Consume (Void Terror)
-	"LOE_030e",  # Hollow (Unused)
-	"NEW1_018e",  # Treasure Crazed (Bloodsail Raider)
+    # Dynamic buffs set by their parent
+    "CS2_236e",  # Divine Spirit
+    "EX1_304e",  # Consume (Void Terror)
+    "LOE_030e",  # Hollow (Unused)
+    "NEW1_018e",  # Treasure Crazed (Bloodsail Raider)
 )
 
 cards.db.initialize()
 for id in sorted(cards.db):
-	card = cards.db[id]
-	description = cleanup_description(card.description)
-	implemented = False
+    card = cards.db[id]
+    ret = card.description
+    ret = re.sub("<i>.+</i>", "", ret)
+    ret = re.sub("(<b>|</b>)", "", ret)
+    ret = re.sub("(" + "|".join(SOLVED_KEYWORDS) + ")", "", ret)
+    ret = re.sub("<[^>]*>", "", ret)
+    exclude_chars = string.punctuation + string.whitespace
+    ret = "".join([ch for ch in ret if ch not in exclude_chars])
+    description = ret
+    implemented = False
 
-	if not description:
-		# Minions without card text or with basic abilities are implemented
-		implemented = True
-	elif card.card_set == CardSet.CREDITS:
-		implemented = True
+    if not description:
+        # Minions without card text or with basic abilities are implemented
+        implemented = True
+    elif card.card_set == CardSet.CREDITS:
+        implemented = True
 
-	if id in DUMMY_CARDS:
-		implemented = True
+    if id in DUMMY_CARDS:
+        implemented = True
 
-	carddef = get_script_definition(id)
-	if carddef:
-		implemented = True
+    carddef = get_script_definition(id)
+    if carddef:
+        implemented = True
 
-	color = GREEN if implemented else RED
-	name = color + "%s: %s" % (PREFIXES[color], card.name) + ENDC
+    color = GREEN if implemented else RED
+    name = color + "%s: %s" % (PREFIXES[color], card.name) + ENDC
 
-	if implemented:
-		implemented_cards.append(card)
-
-
-def cleanup_description(description):
-	ret = description
-	ret = re.sub("<i>.+</i>", "", ret)
-	ret = re.sub("(<b>|</b>)", "", ret)
-	ret = re.sub("(" + "|".join(SOLVED_KEYWORDS) + ")", "", ret)
-	ret = re.sub("<[^>]*>", "", ret)
-	exclude_chars = string.punctuation + string.whitespace
-	ret = "".join([ch for ch in ret if ch not in exclude_chars])
-	return ret
+    if implemented:
+        implemented_cards.append(card)
 
 
 IMPLEMENTED_CARDS = len(implemented_cards)
@@ -93,14 +94,14 @@ IMPLEMENTED_CARDS = len(implemented_cards)
 ###############################################################################################################
 # Action                                                        Relative Action Number          Cumulative Action Number
 ###############################################################################################################
-# Hero Power OppHero                                            10                                          1-1
+# Hero Power OppHero                                            1-1                                         1-1
 # Hero Power OppField0-6                                        1-7                                         2-8
 # Hero Power MyField0-6                                         1-7                                         9-15
-# Hero Power MyHero                                             10                                          16-16
-# Play MyHand0 on MyField0 and Use Action on OppHero            10                                          17-17
+# Hero Power MyHero                                             1-1                                         16-16
+# Play MyHand0 on MyField0 and Use Action on OppHero            1-1                                         17-17
 # Play MyHand0 on MyField0 and Use Action on OppField0-6        1-7                                         18-24
 # Play MyHand0 on MyField0 and Use Action on MyField0-6         1-7                                         25-31
-# Play MyHand0 on MyField0 and Use Action on MyHero             10                                          32-32
+# Play MyHand0 on MyField0 and Use Action on MyHero             1-1                                         32-32
 # Play MyHand0 on MyField1 and Use Action ''                    1-16                                        33-48
 # Play MyHand0 on MyField2-6 ''                                 1-16,1-16,1-16,1-16,1-16                    49-64,65-80,81-96,97-112,113-128
 # Play MyHand1-6 on ''                                          1-112, 1-112, 1-112, 1-112, 1-112, 1-112    129-240, 241-352, 353-464, 465-576, 577-688, 689-800
@@ -242,464 +243,467 @@ IMPLEMENTED_CARDS = len(implemented_cards)
 
 class HearthstoneEnv(gym.Env):
     """
-    Define a simple Banana environment.
+    Define a Hearthstone environment.
     The environment defines which actions can be taken at which point and
     when the agent receives which reward.
     """
 
     def __init__(self):
         self.__version__ = "0.1.0"
-        logging.info("HearthstoneEnv - Version {}".format(self.__version__))
+        print("HearthstoneEnv - Version {}".format(self.__version__))
 
         # General variables defining the environment
-		self.curr_step = -1
-		self.action_space = spaces.Discrete(869)
-		self.observation_space = spaces.Dict(
-			{"myhero": spaces.Discrete(9)},
-			{"opphero": spaces.Discrete(9)},
-			{"myhealth": spaces.Discrete(31)},
-			{"opphealth": spaces.Discrete(31)},
-			{"myarmor": spaces.Discrete(501)},
-			{"opparmor": spaces.Discrete(501)},
-			{"myweaponatt": spaces.Discrete(501)},
-			{"oppweaponatt": spaces.Discrete(501)},
-			{"myweapondur": spaces.Discrete(501)},
-			{"oppweapondur": spaces.Discrete(501)},
-			{"myheropoweravail": spaces.Discrete(2)},
-			{"myunusedmanacrystals": spaces.Discrete(11)}
-			{"myusedmanacrystals": spaces.Discrete(11)},
-			{"oppcrystals": spaces.Discrete(11)},
-			{"mynumcardsinhand": spaces.Discrete(11)},
-			{"oppnumcardsinhand": spaces.Discrete(11)},
-			{"mynumminions": spaces.Discrete(8)},
-			{"oppnumminions": spaces.Discrete(8)},
-			{"mynumsecrets": spaces.Discrete(6)},
-			{"oppnumsecrets": spaces.Discrete(6)},
-			{"myhand0": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand1": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand2": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand3": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand4": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand5": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand6": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand7": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand8": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand9": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myfield0": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myfield1": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myfield2": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myfield3": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myfield4": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myfield5": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myfield6": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"oppfield0": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"oppfield1": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"oppfield2": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"oppfield3": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"oppfield4": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"oppfield5": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"oppfield6": spaces.Discrete(IMPLEMENTED_CARDS+1)},
-			{"myhand0att": spaces.Discrete(501)},
-			{"myhand1att": spaces.Discrete(501)},
-			{"myhand2att": spaces.Discrete(501)},
-			{"myhand3att": spaces.Discrete(501)},
-			{"myhand4att": spaces.Discrete(501)},
-			{"myhand5att": spaces.Discrete(501)},
-			{"myhand6att": spaces.Discrete(501)},
-			{"myhand7att": spaces.Discrete(501)},
-			{"myhand8att": spaces.Discrete(501)},
-			{"myhand9att": spaces.Discrete(501)},
-			{"myfield0att": spaces.Discrete(501)},
-			{"myfield1att": spaces.Discrete(501)},
-			{"myfield2att": spaces.Discrete(501)},
-			{"myfield3att": spaces.Discrete(501)},
-			{"myfield4att": spaces.Discrete(501)},
-			{"myfield5att": spaces.Discrete(501)},
-			{"myfield6att": spaces.Discrete(501)},
-			{"oppfield0att": spaces.Discrete(501)},
-			{"oppfield1att": spaces.Discrete(501)},
-			{"oppfield2att": spaces.Discrete(501)},
-			{"oppfield3att": spaces.Discrete(501)},
-			{"oppfield4att": spaces.Discrete(501)},
-			{"oppfield5att": spaces.Discrete(501)},
-			{"oppfield6att": spaces.Discrete(501)},
-			{"myhand0def": spaces.Discrete(501)},
-			{"myhand1def": spaces.Discrete(501)},
-			{"myhand2def": spaces.Discrete(501)},
-			{"myhand3def": spaces.Discrete(501)},
-			{"myhand4def": spaces.Discrete(501)},
-			{"myhand5def": spaces.Discrete(501)},
-			{"myhand6def": spaces.Discrete(501)},
-			{"myhand7def": spaces.Discrete(501)},
-			{"myhand8def": spaces.Discrete(501)},
-			{"myhand9def": spaces.Discrete(501)},
-			{"myfield0def": spaces.Discrete(501)},
-			{"myfield1def": spaces.Discrete(501)},
-			{"myfield2def": spaces.Discrete(501)},
-			{"myfield3def": spaces.Discrete(501)},
-			{"myfield4def": spaces.Discrete(501)},
-			{"myfield5def": spaces.Discrete(501)},
-			{"myfield6def": spaces.Discrete(501)},
-			{"oppfield0def": spaces.Discrete(501)},
-			{"oppfield1def": spaces.Discrete(501)},
-			{"oppfield2def": spaces.Discrete(501)},
-			{"oppfield3def": spaces.Discrete(501)},
-			{"oppfield4def": spaces.Discrete(501)},
-			{"oppfield5def": spaces.Discrete(501)},
-			{"oppfield6def": spaces.Discrete(501)},
-			{"myhand0effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myhand1effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myhand2effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myhand3effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myhand4effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myhand5effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myhand6effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myhand7effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myhand8effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myhand9effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myfield0effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myfield1effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myfield2effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myfield3effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myfield4effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myfield5effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myfield6effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"oppfield0effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"oppfield1effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"oppfield2effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"oppfield3effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"oppfield4effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"oppfield5effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"oppfield6effects": spaces.Dict(
-				{"windfury", spaces.Discrete(2)},
-				{"divineshield", spaces.Discrete(2)},
-				{"charge", spaces.Discrete(2)},
-				{"taunt", spaces.Discrete(2)},
-				{"stealth", spaces.Discrete(2)},
-				{"poisonous", spaces.Discrete(2)},
-				{"cantbetargeted", spaces.Discrete(2)},
-				{"aura", spaces.Discrete(2)},
-				{"deathrattle", spaces.Discrete(2)},
-				{"frozen", spaces.Discrete(2)},
-				{"silenced", spaces.Discrete(2)}
-			)},
-			{"myfield0canattack": spaces.Discrete(2},
-			{"myfield1canattack": spaces.Discrete(2},
-			{"myfield2canattack": spaces.Discrete(2},
-			{"myfield3canattack": spaces.Discrete(2},
-			{"myfield4canattack": spaces.Discrete(2},
-			{"myfield5canattack": spaces.Discrete(2},
-			{"myfield6canattack": spaces.Discrete(2},
-			{"myherocanattack": spaces.Discrete(2},
-		)
+        self.curr_step = -1
+        self.action_space = spaces.Discrete(869)
+        self.observation_space = spaces.Dict({
+            "myhero": spaces.Discrete(9),
+            "opphero": spaces.Discrete(9),
+            "myhealth": spaces.Discrete(31),
+            "opphealth": spaces.Discrete(31),
+            "myarmor": spaces.Discrete(501),
+            "opparmor": spaces.Discrete(501),
+            "myweaponatt": spaces.Discrete(501),
+            "oppweaponatt": spaces.Discrete(501),
+            "myweapondur": spaces.Discrete(501),
+            "oppweapondur": spaces.Discrete(501),
+            "myheropoweravail": spaces.Discrete(2),
+            "myunusedmanacrystals": spaces.Discrete(11),
+            "myusedmanacrystals": spaces.Discrete(11),
+            "oppcrystals": spaces.Discrete(11),
+            "mynumcardsinhand": spaces.Discrete(11),
+            "oppnumcardsinhand": spaces.Discrete(11),
+            "mynumminions": spaces.Discrete(8),
+            "oppnumminions": spaces.Discrete(8),
+            "mynumsecrets": spaces.Discrete(6),
+            "oppnumsecrets": spaces.Discrete(6),
+            "myhand0": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand1": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand2": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand3": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand4": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand5": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand6": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand7": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand8": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand9": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myfield0": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myfield1": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myfield2": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myfield3": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myfield4": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myfield5": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myfield6": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "oppfield0": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "oppfield1": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "oppfield2": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "oppfield3": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "oppfield4": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "oppfield5": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "oppfield6": spaces.Discrete(IMPLEMENTED_CARDS+1),
+            "myhand0att": spaces.Discrete(501),
+            "myhand1att": spaces.Discrete(501),
+            "myhand2att": spaces.Discrete(501),
+            "myhand3att": spaces.Discrete(501),
+            "myhand4att": spaces.Discrete(501),
+            "myhand5att": spaces.Discrete(501),
+            "myhand6att": spaces.Discrete(501),
+            "myhand7att": spaces.Discrete(501),
+            "myhand8att": spaces.Discrete(501),
+            "myhand9att": spaces.Discrete(501),
+            "myfield0att": spaces.Discrete(501),
+            "myfield1att": spaces.Discrete(501),
+            "myfield2att": spaces.Discrete(501),
+            "myfield3att": spaces.Discrete(501),
+            "myfield4att": spaces.Discrete(501),
+            "myfield5att": spaces.Discrete(501),
+            "myfield6att": spaces.Discrete(501),
+            "oppfield0att": spaces.Discrete(501),
+            "oppfield1att": spaces.Discrete(501),
+            "oppfield2att": spaces.Discrete(501),
+            "oppfield3att": spaces.Discrete(501),
+            "oppfield4att": spaces.Discrete(501),
+            "oppfield5att": spaces.Discrete(501),
+            "oppfield6att": spaces.Discrete(501),
+            "myhand0def": spaces.Discrete(501),
+            "myhand1def": spaces.Discrete(501),
+            "myhand2def": spaces.Discrete(501),
+            "myhand3def": spaces.Discrete(501),
+            "myhand4def": spaces.Discrete(501),
+            "myhand5def": spaces.Discrete(501),
+            "myhand6def": spaces.Discrete(501),
+            "myhand7def": spaces.Discrete(501),
+            "myhand8def": spaces.Discrete(501),
+            "myhand9def": spaces.Discrete(501),
+            "myfield0def": spaces.Discrete(501),
+            "myfield1def": spaces.Discrete(501),
+            "myfield2def": spaces.Discrete(501),
+            "myfield3def": spaces.Discrete(501),
+            "myfield4def": spaces.Discrete(501),
+            "myfield5def": spaces.Discrete(501),
+            "myfield6def": spaces.Discrete(501),
+            "oppfield0def": spaces.Discrete(501),
+            "oppfield1def": spaces.Discrete(501),
+            "oppfield2def": spaces.Discrete(501),
+            "oppfield3def": spaces.Discrete(501),
+            "oppfield4def": spaces.Discrete(501),
+            "oppfield5def": spaces.Discrete(501),
+            "oppfield6def": spaces.Discrete(501),
+            "myhand0effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myhand1effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myhand2effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myhand3effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myhand4effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myhand5effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myhand6effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myhand7effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myhand8effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myhand9effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myfield0effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myfield1effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myfield2effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myfield3effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myfield4effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myfield5effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myfield6effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "oppfield0effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "oppfield1effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "oppfield2effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "oppfield3effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "oppfield4effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "oppfield5effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "oppfield6effects": spaces.Dict({
+                "windfury": spaces.Discrete(2),
+                "divineshield": spaces.Discrete(2),
+                "charge": spaces.Discrete(2),
+                "taunt": spaces.Discrete(2),
+                "stealth": spaces.Discrete(2),
+                "poisonous": spaces.Discrete(2),
+                "cantbetargeted": spaces.Discrete(2),
+                "aura": spaces.Discrete(2),
+                "deathrattle": spaces.Discrete(2),
+                "frozen": spaces.Discrete(2),
+                "silenced": spaces.Discrete(2)}
+            ),
+            "myfield0canattack": spaces.Discrete(2),
+            "myfield1canattack": spaces.Discrete(2),
+            "myfield2canattack": spaces.Discrete(2),
+            "myfield3canattack": spaces.Discrete(2),
+            "myfield4canattack": spaces.Discrete(2),
+            "myfield5canattack": spaces.Discrete(2),
+            "myfield6canattack": spaces.Discrete(2),
+            "myherocanattack": spaces.Discrete(2)
+        })
+        self.curr_episode=-1
+        self.action_episode_memory=[]
+        self.setup_game()
 
-		self.curr_episode=-1
-		self.action_episode_memory=[]
-		# At the root pretend the player just moved is p2 - p1 has the first move
-		self.playerJustMoved=2
-		self.playerToMove=1
-		self.players_ordered=None
-		self.hero1=random.choice(list(CardClass))
-		self.deck1=None
-		self.hero2=random.choice(list(CardClass))
-		self.deck2=None
-		self.game=None
-		self.setup_game()
-		self.lastMovePlayed=None
+    def reset(self):
+        self.setup_game()
+        return self._get_state()
 
-	def setup_game(self):
-		if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None:
-			deck1=random_draft(self.hero1)
-			deck2=random_draft(self.hero2)
-			player1=Player("Player1", deck1, self.hero1.default_hero)
-			player2=Player("Player2", deck2, self.hero2.default_hero)
+    def setup_game(self):
+        # At the root pretend the player just moved is p2 - p1 has the first move
+        self.playerJustMoved=2
+        self.playerToMove=1
+        self.players_ordered=None
+        self.hero1=random.choice(list(CardClass))
+        self.deck1=None
+        self.hero2=random.choice(list(CardClass))
+        self.deck2=None
+        self.game=None
+        self.lastMovePlayed=None
+        if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None:
+            self.deck1=random_draft(self.hero1)
+            self.deck2=random_draft(self.hero2)
+            self.player1=Player("Player1", self.deck1, self.hero1.default_hero)
+            self.player2=Player("Player2", self.deck2, self.hero2.default_hero)
 
-			self.game=Game(players=(player1, player2))
-			self.game.start()
-			self.players_ordered=[self.game.player1, self.game.player2]
-			# At the root pretend the player just moved is p2 - p1 has the first move
-			self.playerJustMoved=2
-			self.playerToMove=1
-			self.lastMovePlayed=None
+            self.game=Game(players=(self.player1, self.player2))
+            self.game.start()
+            self.players_ordered=[self.game.player1, self.game.player2]
+            # At the root pretend the player just moved is p2 - p1 has the first move
+            self.playerJustMoved=2
+            self.playerToMove=1
+            self.lastMovePlayed=None
 
-	def step(self, action):
-		"""
+    def step(self, action):
+        """
         The agent takes a step in the environment.
         Parameters
         ----------
@@ -732,466 +736,618 @@ class HearthstoneEnv(gym.Env):
         ob=self._get_state()
         return ob, reward, reward != 0, {}
 
-	def _get_reward(self):
-		""" Get the current reward, from the perspective of the player who just moved
-			1 for win, -1 for loss
-			0 if game is not over
-		"""
-		player=self.playerJustMoved
-		if self.players_ordered[0].hero.health <= 0 and self.players_ordered[1].hero.health <= 0:  # tie
-			return 0.1
-		elif self.players_ordered[player - 1].hero.health <= 0:  # loss
-			return -1
-		elif self.players_ordered[2 - player].hero.health <= 0:  # win
-			return 1
-		else:
-			return 0
+    def _take_action(self, action):
+        possible_actions=self.__getMoves(); #get valid moves
+        counter=0
+        while len(possible_actions)<869: #fill the entire action space by repeating some valid moves
+            possible_actions.append(possible_actions[counter])
+            counter=counter+1
+        self.__doMove(possible_actions[action])
 
-	def _get_state(self):
-		game=self.game
-		player=self.players_ordered[self.playerToMove - 1]
-		p1=player
-		p2=player.opponent
-		s={
-			"myhero": p1.hero.card_class-1,
-			"opphero": p2.hero.card_class-1,
-			"myhealth": p1.hero.health,
-			"opphealth": p2.hero.health,
-			"myarmor": p1.hero.armor,
-			"opparmor": p2.hero.armor,
-			"myweaponatt": p1.weapon.damage,
-			"oppweaponatt": p2.weapon.damage,
-			"myweapondur": p1.weapon.durability,
-			"oppweapondur": p2.weapon.durability,
-			"myheropoweravail": p1.hero.power.is_usable() * 1,
-			"myunusedmanacrystals": p1.mana,
-			"myusedmanacrystals": p1.max_mana-p1.mana,
-			"oppcrystals": p2.max_mana,
-			"mynumcardsinhand": len(p1.hand),
-			"oppnumcardsinhand": len(p2.hand),
-			"mynumminions": len(p1.field),
-			"oppnumminions": len(p2.field),
-			"mynumsecrets": len(p1.secrets),
-			"oppnumsecrets": len(p2.secrets),
-			"myhand0": implemented_cards.index(p1.hand[0]),
-			"myhand1": implemented_cards.index(p1.hand[1]),
-			"myhand2": implemented_cards.index(p1.hand[2]),
-			"myhand3": implemented_cards.index(p1.hand[3]),
-			"myhand4": implemented_cards.index(p1.hand[4]),
-			"myhand5": implemented_cards.index(p1.hand[5]),
-			"myhand6": implemented_cards.index(p1.hand[6]),
-			"myhand7": implemented_cards.index(p1.hand[7]),
-			"myhand8": implemented_cards.index(p1.hand[8]),
-			"myhand9": implemented_cards.index(p1.hand[9]),
-			"myfield0": implemented_cards.index(p1.field[0]),
-			"myfield1": implemented_cards.index(p1.field[1]),
-			"myfield2": implemented_cards.index(p1.field[2]),
-			"myfield3": implemented_cards.index(p1.field[3]),
-			"myfield4": implemented_cards.index(p1.field[4]),
-			"myfield5": implemented_cards.index(p1.field[5]),
-			"myfield6": implemented_cards.index(p1.field[6]),
-			"oppfield0": implemented_cards.index(p2.field[0]),
-			"oppfield1": implemented_cards.index(p2.field[1]),
-			"oppfield2": implemented_cards.index(p2.field[2]),
-			"oppfield3": implemented_cards.index(p2.field[3]),
-			"oppfield4": implemented_cards.index(p2.field[4]),
-			"oppfield5": implemented_cards.index(p2.field[5]),
-			"oppfield6": implemented_cards.index(p2.field[6]),
-			"myhand0att": p1.hand[0].atk if 0 < len(p1.hand) else 0,
-			"myhand1att": p1.hand[1].atk if 1 < len(p1.hand) else 0,
-			"myhand2att": p1.hand[2].atk if 2 < len(p1.hand) else 0,
-			"myhand3att": p1.hand[3].atk if 3 < len(p1.hand) else 0,
-			"myhand4att": p1.hand[4].atk if 4 < len(p1.hand) else 0,
-			"myhand5att": p1.hand[5].atk if 5 < len(p1.hand) else 0,
-			"myhand6att": p1.hand[6].atk if 6 < len(p1.hand) else 0,
-			"myhand7att": p1.hand[7].atk if 7 < len(p1.hand) else 0,
-			"myhand8att": p1.hand[8].atk if 8 < len(p1.hand) else 0,
-			"myhand9att": p1.hand[9].atk if 9 < len(p1.hand) else 0,
-			"myfield0att": p1.field[0].atk if 0 < len(p1.field) else 0,
-			"myfield1att": p1.field[1].atk if 1 < len(p1.field) else 0,
-			"myfield2att": p1.field[2].atk if 2 < len(p1.field) else 0,
-			"myfield3att": p1.field[3].atk if 3 < len(p1.field) else 0,
-			"myfield4att": p1.field[4].atk if 4 < len(p1.field) else 0,
-			"myfield5att": p1.field[5].atk if 5 < len(p1.field) else 0,
-			"myfield6att": p1.field[6].atk if 6 < len(p1.field) else 0,
-			"oppfield0att": p2.field[0].atk if 0 < len(p2.field) else 0,
-			"oppfield1att": p2.field[0].atk if 0 < len(p2.field) else 0,
-			"oppfield2att": p2.field[0].atk if 0 < len(p2.field) else 0,
-			"oppfield3att": p2.field[0].atk if 0 < len(p2.field) else 0,
-			"oppfield4att": p2.field[0].atk if 0 < len(p2.field) else 0,
-			"oppfield5att": p2.field[0].atk if 0 < len(p2.field) else 0,
-			"oppfield6att": p2.field[0].atk if 0 < len(p2.field) else 0,
-			"myhand0def": p1.hand[0].health if 0 < len(p1.hand) else 0,
-			"myhand1def": p1.hand[1].health if 1 < len(p1.hand) else 0,
-			"myhand2def": p1.hand[2].health if 2 < len(p1.hand) else 0,
-			"myhand3def": p1.hand[3].health if 3 < len(p1.hand) else 0,
-			"myhand4def": p1.hand[4].health if 4 < len(p1.hand) else 0,
-			"myhand5def": p1.hand[5].health if 5 < len(p1.hand) else 0,
-			"myhand6def": p1.hand[6].health if 6 < len(p1.hand) else 0,
-			"myhand7def": p1.hand[7].health if 7 < len(p1.hand) else 0,
-			"myhand8def": p1.hand[8].health if 8 < len(p1.hand) else 0,
-			"myhand9def": p1.hand[9].health if 9 < len(p1.hand) else 0,
-			"myfield0def": p1.field[0].health if 0 < len(p1.field) else 0,
-			"myfield1def": p1.field[1].health if 1 < len(p1.field) else 0,
-			"myfield2def": p1.field[2].health if 2 < len(p1.field) else 0,
-			"myfield3def": p1.field[3].health if 3 < len(p1.field) else 0,
-			"myfield4def": p1.field[4].health if 4 < len(p1.field) else 0,
-			"myfield5def": p1.field[5].health if 5 < len(p1.field) else 0,
-			"myfield6def": p1.field[6].health if 6 < len(p1.field) else 0,
-			"oppfield0def": p2.field[0].health if 0 < len(p2.field) else 0,
-			"oppfield1def": p2.field[0].health if 0 < len(p2.field) else 0,
-			"oppfield2def": p2.field[0].health if 0 < len(p2.field) else 0,
-			"oppfield3def": p2.field[0].health if 0 < len(p2.field) else 0,
-			"oppfield4def": p2.field[0].health if 0 < len(p2.field) else 0,
-			"oppfield5def": p2.field[0].health if 0 < len(p2.field) else 0,
-			"oppfield6def": p2.field[0].health if 0 < len(p2.field) else 0,
-			"myhand0effects": {
-				"windfury", 1 if 0 < len(p1.hand) and p1.hand[0].windfury else 0,
-				"divineshield", 1 if 0 < len(p1.hand) and p1.hand[0].divine_shield else 0,
-				"charge", 1 if 0 < len(p1.hand) and p1.hand[0].charge else 0,
-				"taunt", 1 if 0 < len(p1.hand) and p1.hand[0].taunt else 0,
-				"stealth", 1 if 0 < len(p1.hand) and p1.hand[0].stealthed else 0,
-				"poisonous", 1 if 0 < len(p1.hand) and p1.hand[0].poisonous else 0,
-				"cantbetargeted", 1 if 0 < len(p1.hand) and (p1.hand[0].cant_be_targeted_by_abilities | | p1.hand[0].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 0 < len(p1.hand) and p1.hand[0].aura else 0,
-				"deathrattle", 1 if 0 < len(p1.hand) and p1.hand[0].has_deathrattle else 0,
-				"frozen", 1 if 0 < len(p1.hand) and p1.hand[0].frozen else 0,
-				"silenced", 1 if 0 < len(p1.hand) and p1.hand[0].silenced else 0
-			},
-			"myhand1effects": {
-				"windfury", 1 if 1 < len(p1.hand) and p1.hand[1].windfury else 0,
-				"divineshield", 1 if 1 < len(p1.hand) and p1.hand[1].divine_shield else 0,
-				"charge", 1 if 1 < len(p1.hand) and p1.hand[1].charge else 0,
-				"taunt", 1 if 1 < len(p1.hand) and p1.hand[1].taunt else 0,
-				"stealth", 1 if 1 < len(p1.hand) and p1.hand[1].stealthed else 0,
-				"poisonous", 1 if 1 < len(p1.hand) and p1.hand[1].poisonous else 0,
-				"cantbetargeted", 1 if 1 < len(p1.hand) and (p1.hand[1].cant_be_targeted_by_abilities | | p1.hand[1].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 1 < len(p1.hand) and p1.hand[1].aura else 0,
-				"deathrattle", 1 if 1 < len(p1.hand) and p1.hand[1].has_deathrattle else 0,
-				"frozen", 1 if 1 < len(p1.hand) and p1.hand[1].frozen else 0,
-				"silenced", 1 if 1 < len(p1.hand) and p1.hand[1].silenced else 0
-			},
-			"myhand2effects": {
-				"windfury", 1 if 2 < len(p1.hand) and p1.hand[2].windfury else 0,
-				"divineshield", 1 if 2 < len(p1.hand) and p1.hand[2].divine_shield else 0,
-				"charge", 1 if 2 < len(p1.hand) and p1.hand[2].charge else 0,
-				"taunt", 1 if 2 < len(p1.hand) and p1.hand[2].taunt else 0,
-				"stealth", 1 if 2 < len(p1.hand) and p1.hand[2].stealthed else 0,
-				"poisonous", 1 if 2 < len(p1.hand) and p1.hand[2].poisonous else 0,
-				"cantbetargeted", 1 if 2 < len(p1.hand) and (p1.hand[2].cant_be_targeted_by_abilities | | p1.hand[2].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 2 < len(p1.hand) and p1.hand[2].aura else 0,
-				"deathrattle", 1 if 2 < len(p1.hand) and p1.hand[2].has_deathrattle else 0,
-				"frozen", 1 if 2 < len(p1.hand) and p1.hand[2].frozen else 0,
-				"silenced", 1 if 2 < len(p1.hand) and p1.hand[2].silenced else 0
-			},
-			"myhand3effects": {
-				"windfury", 1 if 3 < len(p1.hand) and p1.hand[3].windfury else 0,
-				"divineshield", 1 if 3 < len(p1.hand) and p1.hand[3].divine_shield else 0,
-				"charge", 1 if 3 < len(p1.hand) and p1.hand[3].charge else 0,
-				"taunt", 1 if 3 < len(p1.hand) and p1.hand[3].taunt else 0,
-				"stealth", 1 if 3 < len(p1.hand) and p1.hand[3].stealthed else 0,
-				"poisonous", 1 if 3 < len(p1.hand) and p1.hand[3].poisonous else 0,
-				"cantbetargeted", 1 if 3 < len(p1.hand) and (p1.hand[3].cant_be_targeted_by_abilities | | p1.hand[3].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 3 < len(p1.hand) and p1.hand[3].aura else 0,
-				"deathrattle", 1 if 3 < len(p1.hand) and p1.hand[3].has_deathrattle else 0,
-				"frozen", 1 if 3 < len(p1.hand) and p1.hand[3].frozen else 0,
-				"silenced", 1 if 3 < len(p1.hand) and p1.hand[3].silenced else 0
-			},
-			"myhand4effects": {
-				"windfury", 1 if 4 < len(p1.hand) and p1.hand[4].windfury else 0,
-				"divineshield", 1 if 4 < len(p1.hand) and p1.hand[4].divine_shield else 0,
-				"charge", 1 if 4 < len(p1.hand) and p1.hand[4].charge else 0,
-				"taunt", 1 if 4 < len(p1.hand) and p1.hand[4].taunt else 0,
-				"stealth", 1 if 4 < len(p1.hand) and p1.hand[4].stealthed else 0,
-				"poisonous", 1 if 4 < len(p1.hand) and p1.hand[4].poisonous else 0,
-				"cantbetargeted", 1 if 4 < len(p1.hand) and (p1.hand[4].cant_be_targeted_by_abilities | | p1.hand[4].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 4 < len(p1.hand) and p1.hand[4].aura else 0,
-				"deathrattle", 1 if 4 < len(p1.hand) and p1.hand[4].has_deathrattle else 0,
-				"frozen", 1 if 4 < len(p1.hand) and p1.hand[4].frozen else 0,
-				"silenced", 1 if 4 < len(p1.hand) and p1.hand[4].silenced else 0
-			},
-			"myhand5effects": {
-				"windfury", 1 if 5 < len(p1.hand) and p1.hand[5].windfury else 0,
-				"divineshield", 1 if 5 < len(p1.hand) and p1.hand[5].divine_shield else 0,
-				"charge", 1 if 5 < len(p1.hand) and p1.hand[5].charge else 0,
-				"taunt", 1 if 5 < len(p1.hand) and p1.hand[5].taunt else 0,
-				"stealth", 1 if 5 < len(p1.hand) and p1.hand[5].stealthed else 0,
-				"poisonous", 1 if 5 < len(p1.hand) and p1.hand[5].poisonous else 0,
-				"cantbetargeted", 1 if 5 < len(p1.hand) and (p1.hand[5].cant_be_targeted_by_abilities | | p1.hand[5].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 5 < len(p1.hand) and p1.hand[5].aura else 0,
-				"deathrattle", 1 if 5 < len(p1.hand) and p1.hand[5].has_deathrattle else 0,
-				"frozen", 1 if 5 < len(p1.hand) and p1.hand[5].frozen else 0,
-				"silenced", 1 if 5 < len(p1.hand) and p1.hand[5].silenced else 0
-			},
-			"myhand6effects": {
-				"windfury", 1 if 6 < len(p1.hand) and p1.hand[6].windfury else 0,
-				"divineshield", 1 if 6 < len(p1.hand) and p1.hand[6].divine_shield else 0,
-				"charge", 1 if 6 < len(p1.hand) and p1.hand[6].charge else 0,
-				"taunt", 1 if 6 < len(p1.hand) and p1.hand[6].taunt else 0,
-				"stealth", 1 if 6 < len(p1.hand) and p1.hand[6].stealthed else 0,
-				"poisonous", 1 if 6 < len(p1.hand) and p1.hand[6].poisonous else 0,
-				"cantbetargeted", 1 if 6 < len(p1.hand) and (p1.hand[6].cant_be_targeted_by_abilities | | p1.hand[6].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 6 < len(p1.hand) and p1.hand[6].aura else 0,
-				"deathrattle", 1 if 6 < len(p1.hand) and p1.hand[6].has_deathrattle else 0,
-				"frozen", 1 if 6 < len(p1.hand) and p1.hand[6].frozen else 0,
-				"silenced", 1 if 6 < len(p1.hand) and p1.hand[6].silenced else 0
-			},
-			"myhand7effects": {
-				"windfury", 1 if 7 < len(p1.hand) and p1.hand[7].windfury else 0,
-				"divineshield", 1 if 7 < len(p1.hand) and p1.hand[7].divine_shield else 0,
-				"charge", 1 if 7 < len(p1.hand) and p1.hand[7].charge else 0,
-				"taunt", 1 if 7 < len(p1.hand) and p1.hand[7].taunt else 0,
-				"stealth", 1 if 7 < len(p1.hand) and p1.hand[7].stealthed else 0,
-				"poisonous", 1 if 7 < len(p1.hand) and p1.hand[7].poisonous else 0,
-				"cantbetargeted", 1 if 7 < len(p1.hand) and (p1.hand[7].cant_be_targeted_by_abilities | | p1.hand[7].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 7 < len(p1.hand) and p1.hand[7].aura else 0,
-				"deathrattle", 1 if 7 < len(p1.hand) and p1.hand[7].has_deathrattle else 0,
-				"frozen", 1 if 7 < len(p1.hand) and p1.hand[7].frozen else 0,
-				"silenced", 1 if 7 < len(p1.hand) and p1.hand[7].silenced else 0
-			},
-			"myhand8effects": {
-				"windfury", 1 if 8 < len(p1.hand) and p1.hand[8].windfury else 0,
-				"divineshield", 1 if p1.hand[8].divine_shield else 0,
-				"charge", 1 if p1.hand[8].charge else 0,
-				"taunt", 1 if p1.hand[8].taunt else 0,
-				"stealth", 1 if p1.hand[8].stealthed else 0,
-				"poisonous", 1 if p1.hand[8].poisonous else 0,
-				"cantbetargeted", 1 if (p1.hand[8].cant_be_targeted_by_abilities | | p1.hand[8].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if p1.hand[8].aura else 0,
-				"deathrattle", 1 if p1.hand[8].has_deathrattle else 0,
-				"frozen", 1 if p1.hand[8].frozen else 0,
-				"silenced", 1 if p1.hand[8].silenced else 0
-			},
-			"myhand9effects": {
-				"windfury", 1 if p1.hand[9].windfury else 0,
-				"divineshield", 1 if p1.hand[9].divine_shield else 0,
-				"charge", 1 if p1.hand[9].charge else 0,
-				"taunt", 1 if p1.hand[9].taunt else 0,
-				"stealth", 1 if p1.hand[9].stealthed else 0,
-				"poisonous", 1 if p1.hand[9].poisonous else 0,
-				"cantbetargeted", 1 if (p1.hand[9].cant_be_targeted_by_abilities | | p1.hand[9].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if p1.hand97].aura else 0,
-				"deathrattle", 1 if p1.hand[9].has_deathrattle else 0,
-				"frozen", 1 if p1.hand[9].frozen else 0,
-				"silenced", 1 if p1.hand[9].silenced else 0
-			},
-			"myfield0effects": {
-				"windfury", 1 if 0 < len(p1.field) and p1.field[0].windfury else 0,
-				"divineshield", 1 if 0 < len(
-				    p1.field) and p1.field[0].divine_shield else 0,
-				"charge", 1 if 0 < len(p1.field) and p1.field[0].charge else 0,
-				"taunt", 1 if 0 < len(p1.field) and p1.field[0].taunt else 0,
-				"stealth", 1 if 0 < len(p1.field) and p1.field[0].stealthed else 0,
-				"poisonous", 1 if 0 < len(p1.field) and p1.field[0].poisonous else 0,
-				"cantbetargeted", 1 if 0 < len(p1.field) and (p1.field[0].cant_be_targeted_by_abilities | | p1.field[0].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 0 < len(p1.field) and p1.field[0].aura else 0,
-				"deathrattle", 1 if 0 < len(
-				    p1.field) and p1.field[0].has_deathrattle else 0,
-				"frozen", 1 if 0 < len(p1.field) and p1.field[0].frozen else 0,
-				"silenced", 1 if 0 < len(p1.field) and p1.field[0].silenced else 0
-			},
-			"myfield1effects": {
-				"windfury", 1 if 1 < len(p1.field) and p1.field[1].windfury else 0,
-				"divineshield", 1 if 1 < len(
-				    p1.field) and p1.field[1].divine_shield else 0,
-				"charge", 1 if 1 < len(p1.field) and p1.field[1].charge else 0,
-				"taunt", 1 if 1 < len(p1.field) and p1.field[1].taunt else 0,
-				"stealth", 1 if 1 < len(p1.field) and p1.field[1].stealthed else 0,
-				"poisonous", 1 if 1 < len(p1.field) and p1.field[1].poisonous else 0,
-				"cantbetargeted", 1 if 1 < len(p1.field) and (p1.field[1].cant_be_targeted_by_abilities | | p1.field[1].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 1 < len(p1.field) and p1.field[1].aura else 0,
-				"deathrattle", 1 if 1 < len(
-				    p1.field) and p1.field[1].has_deathrattle else 0,
-				"frozen", 1 if 1 < len(p1.field) and p1.field[1].frozen else 0,
-				"silenced", 1 if 1 < len(p1.field) and p1.field[1].silenced else 0
-			},
-			"myfield2effects": {
-				"windfury", 1 if 2 < len(p1.field) and p1.field[2].windfury else 0,
-				"divineshield", 1 if 2 < len(
-				    p1.field) and p1.field[2].divine_shield else 0,
-				"charge", 1 if 2 < len(p1.field) and p1.field[2].charge else 0,
-				"taunt", 1 if 2 < len(p1.field) and p1.field[2].taunt else 0,
-				"stealth", 1 if 2 < len(p1.field) and p1.field[2].stealthed else 0,
-				"poisonous", 1 if 2 < len(p1.field) and p1.field[2].poisonous else 0,
-				"cantbetargeted", 1 if 2 < len(p1.field) and (p1.field[2].cant_be_targeted_by_abilities | | p1.field[2].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 2 < len(p1.field) and p1.field[2].aura else 0,
-				"deathrattle", 1 if 2 < len(
-				    p1.field) and p1.field[2].has_deathrattle else 0,
-				"frozen", 1 if 2 < len(p1.field) and p1.field[2].frozen else 0,
-				"silenced", 1 if 2 < len(p1.field) and p1.field[2].silenced else 0
-			},
-			"myfield3effects": {
-				"windfury", 1 if 3 < len(p1.field) and p1.field[3].windfury else 0,
-				"divineshield", 1 if 3 < len(
-				    p1.field) and p1.field[3].divine_shield else 0,
-				"charge", 1 if 3 < len(p1.field) and p1.field[3].charge else 0,
-				"taunt", 1 if 3 < len(p1.field) and p1.field[3].taunt else 0,
-				"stealth", 1 if 3 < len(p1.field) and p1.field[3].stealthed else 0,
-				"poisonous", 1 if 3 < len(p1.field) and p1.field[3].poisonous else 0,
-				"cantbetargeted", 1 if 3 < len(p1.field) and (p1.field[3].cant_be_targeted_by_abilities | | p1.field[3].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 3 < len(p1.field) and p1.field[3].aura else 0,
-				"deathrattle", 1 if 3 < len(
-				    p1.field) and p1.field[3].has_deathrattle else 0,
-				"frozen", 1 if 3 < len(p1.field) and p1.field[3].frozen else 0,
-				"silenced", 1 if 3 < len(p1.field) and p1.field[3].silenced else 0
-			},
-			"myfield4effects": {
-				"windfury", 1 if 4 < len(p1.field) and p1.field[4].windfury else 0,
-				"divineshield", 1 if 4 < len(
-				    p1.field) and p1.field[4].divine_shield else 0,
-				"charge", 1 if 4 < len(p1.field) and p1.field[4].charge else 0,
-				"taunt", 1 if 4 < len(p1.field) and p1.field[4].taunt else 0,
-				"stealth", 1 if 4 < len(p1.field) and p1.field[4].stealthed else 0,
-				"poisonous", 1 if 4 < len(p1.field) and p1.field[4].poisonous else 0,
-				"cantbetargeted", 1 if 4 < len(p1.field) and (p1.field[4].cant_be_targeted_by_abilities | | p1.field[4].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 4 < len(p1.field) and p1.field[4].aura else 0,
-				"deathrattle", 1 if 4 < len(
-				    p1.field) and p1.field[4].has_deathrattle else 0,
-				"frozen", 1 if 4 < len(p1.field) and p1.field[4].frozen else 0,
-				"silenced", 1 if 4 < len(p1.field) and p1.field[4].silenced else 0
-			},
-			"myfield5effects": {
-				"windfury", 1 if 5 < len(p1.field) and p1.field[5].windfury else 0,
-				"divineshield", 1 if 5 < len(
-				    p1.field) and p1.field[5].divine_shield else 0,
-				"charge", 1 if 5 < len(p1.field) and p1.field[5].charge else 0,
-				"taunt", 1 if 5 < len(p1.field) and p1.field[5].taunt else 0,
-				"stealth", 1 if 5 < len(p1.field) and p1.field[5].stealthed else 0,
-				"poisonous", 1 if 5 < len(p1.field) and p1.field[5].poisonous else 0,
-				"cantbetargeted", 1 if 5 < len(p1.field) and (p1.field[5].cant_be_targeted_by_abilities | | p1.field[5].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 5 < len(p1.field) and p1.field[5].aura else 0,
-				"deathrattle", 1 if 5 < len(
-				    p1.field) and p1.field[5].has_deathrattle else 0,
-				"frozen", 1 if 5 < len(p1.field) and p1.field[5].frozen else 0,
-				"silenced", 1 if 5 < len(p1.field) and p1.field[5].silenced else 0
-			},
-			"myfield6effects": {
-				"windfury", 1 if 6 < len(p1.field) and p1.field[6].windfury else 0,
-				"divineshield", 1 if 6 < len(
-				    p1.field) and p1.field[6].divine_shield else 0,
-				"charge", 1 if 6 < len(p1.field) and p1.field[6].charge else 0,
-				"taunt", 1 if 6 < len(p1.field) and p1.field[6].taunt else 0,
-				"stealth", 1 if 6 < len(p1.field) and p1.field[6].stealthed else 0,
-				"poisonous", 1 if 6 < len(p1.field) and p1.field[6].poisonous else 0,
-				"cantbetargeted", 1 if 6 < len(p1.field) and (p1.field[6].cant_be_targeted_by_abilities | | p1.field[6].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 6 < len(p1.field) and p1.field[6].aura else 0,
-				"deathrattle", 1 if 6 < len(
-				    p1.field) and p1.field[6].has_deathrattle else 0,
-				"frozen", 1 if 6 < len(p1.field) and p1.field[6].frozen else 0,
-				"silenced", 1 if 6 < len(p1.field) and p1.field[6].silenced else 0
-			},
-			"oppfield0effects": {
-				"windfury", 1 if 0 < len(p2.field) and p2.field[0].windfury else 0,
-				"divineshield", 1 if 0 < len(
-				    p2.field) and p2.field[0].divine_shield else 0,
-				"charge", 1 if 0 < len(p2.field) and p2.field[0].charge else 0,
-				"taunt", 1 if 0 < len(p2.field) and p2.field[0].taunt else 0,
-				"stealth", 1 if 0 < len(p2.field) and p2.field[0].stealthed else 0,
-				"poisonous", 1 if 0 < len(p2.field) and p2.field[0].poisonous else 0,
-				"cantbetargeted", 1 if 0 < len(p2.field) and (p2.field[0].cant_be_targeted_by_abilities | | p2.field[0].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 0 < len(p2.field) and p2.field[0].aura else 0,
-				"deathrattle", 1 if 0 < len(
-				    p2.field) and p2.field[0].has_deathrattle else 0,
-				"frozen", 1 if 0 < len(p2.field) and p2.field[0].frozen else 0,
-				"silenced", 1 if 0 < len(p2.field) and p2.field[0].silenced else 0
-			},
-			"oppfield1effects": {
-				"windfury", 1 if 1 < len(p2.field) and p2.field[1].windfury else 0,
-				"divineshield", 1 if 1 < len(
-				    p2.field) and p2.field[1].divine_shield else 0,
-				"charge", 1 if 1 < len(p2.field) and p2.field[1].charge else 0,
-				"taunt", 1 if 1 < len(p2.field) and p2.field[1].taunt else 0,
-				"stealth", 1 if 1 < len(p2.field) and p2.field[1].stealthed else 0,
-				"poisonous", 1 if 1 < len(p2.field) and p2.field[1].poisonous else 0,
-				"cantbetargeted", 1 if 1 < len(p2.field) and (p2.field[1].cant_be_targeted_by_abilities | | p2.field[1].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 1 < len(p2.field) and p2.field[1].aura else 0,
-				"deathrattle", 1 if 1 < len(
-				    p2.field) and p2.field[1].has_deathrattle else 0,
-				"frozen", 1 if 1 < len(p2.field) and p2.field[1].frozen else 0,
-				"silenced", 1 if 1 < len(p2.field) and p2.field[1].silenced else 0
-			},
-			"oppfield2effects": {
-				"windfury", 1 if 2 < len(p2.field) and p2.field[2].windfury else 0,
-				"divineshield", 1 if 2 < len(
-				    p2.field) and p2.field[2].divine_shield else 0,
-				"charge", 1 if 2 < len(p2.field) and p2.field[2].charge else 0,
-				"taunt", 1 if 2 < len(p2.field) and p2.field[2].taunt else 0,
-				"stealth", 1 if 2 < len(p2.field) and p2.field[2].stealthed else 0,
-				"poisonous", 1 if 2 < len(p2.field) and p2.field[2].poisonous else 0,
-				"cantbetargeted", 1 if 2 < len(p2.field) and (p2.field[2].cant_be_targeted_by_abilities | | p2.field[2].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 2 < len(p2.field) and p2.field[2].aura else 0,
-				"deathrattle", 1 if 2 < len(
-				    p2.field) and p2.field[2].has_deathrattle else 0,
-				"frozen", 1 if 2 < len(p2.field) and p2.field[2].frozen else 0,
-				"silenced", 1 if 2 < len(p2.field) and p2.field[2].silenced else 0
-			},
-			"oppfield3effects": {
-				"windfury", 1 if 3 < len(p2.field) and p2.field[3].windfury else 0,
-				"divineshield", 1 if 3 < len(
-				    p2.field) and p2.field[3].divine_shield else 0,
-				"charge", 1 if 3 < len(p2.field) and p2.field[3].charge else 0,
-				"taunt", 1 if 3 < len(p2.field) and p2.field[3].taunt else 0,
-				"stealth", 1 if 3 < len(p2.field) and p2.field[3].stealthed else 0,
-				"poisonous", 1 if 3 < len(p2.field) and p2.field[3].poisonous else 0,
-				"cantbetargeted", 1 if 3 < len(p2.field) and (p2.field[3].cant_be_targeted_by_abilities | | p2.field[3].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 3 < len(p2.field) and p2.field[3].aura else 0,
-				"deathrattle", 1 if 3 < len(
-				    p2.field) and p2.field[3].has_deathrattle else 0,
-				"frozen", 1 if 3 < len(p2.field) and p2.field[3].frozen else 0,
-				"silenced", 1 if 3 < len(p2.field) and p2.field[3].silenced else 0
-			},
-			"oppfield4effects": {
-				"windfury", 1 if 4 < len(p2.field) and p2.field[4].windfury else 0,
-				"divineshield", 1 if 4 < len(
-				    p2.field) and p2.field[4].divine_shield else 0,
-				"charge", 1 if 4 < len(p2.field) and p2.field[4].charge else 0,
-				"taunt", 1 if 4 < len(p2.field) and p2.field[4].taunt else 0,
-				"stealth", 1 if 4 < len(p2.field) and p2.field[4].stealthed else 0,
-				"poisonous", 1 if 4 < len(p2.field) and p2.field[4].poisonous else 0,
-				"cantbetargeted", 1 if 4 < len(p2.field) and (p2.field[4].cant_be_targeted_by_abilities | | p2.field[4].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 4 < len(p2.field) and p2.field[4].aura else 0,
-				"deathrattle", 1 if 4 < len(
-				    p2.field) and p2.field[4].has_deathrattle else 0,
-				"frozen", 1 if 4 < len(p2.field) and p2.field[4].frozen else 0,
-				"silenced", 1 if 4 < len(p2.field) and p2.field[4].silenced else 0
-			},
-			"oppfield5effects": {
-				"windfury", 1 if 5 < len(p2.field) and p2.field[5].windfury else 0,
-				"divineshield", 1 if 5 < len(
-				    p2.field) and p2.field[5].divine_shield else 0,
-				"charge", 1 if 5 < len(p2.field) and p2.field[5].charge else 0,
-				"taunt", 1 if 5 < len(p2.field) and p2.field[5].taunt else 0,
-				"stealth", 1 if 5 < len(p2.field) and p2.field[5].stealthed else 0,
-				"poisonous", 1 if 5 < len(p2.field) and p2.field[5].poisonous else 0,
-				"cantbetargeted", 1 if 5 < len(p2.field) and (p2.field[5].cant_be_targeted_by_abilities | | p2.field[5].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 5 < len(p2.field) and p2.field[5].aura else 0,
-				"deathrattle", 1 if 5 < len(
-				    p2.field) and p2.field[5].has_deathrattle else 0,
-				"frozen", 1 if 5 < len(p2.field) and p2.field[5].frozen else 0,
-				"silenced", 1 if 5 < len(p2.field) and p2.field[5].silenced else 0
-			},
-			"oppfield6effects": {
-				"windfury", 1 if 6 < len(p2.field) and p2.field[6].windfury else 0,
-				"divineshield", 1 if 6 < len(
-				    p2.field) and p2.field[6].divine_shield else 0,
-				"charge", 1 if 6 < len(p2.field) and p2.field[6].charge else 0,
-				"taunt", 1 if 6 < len(p2.field) and p2.field[6].taunt else 0,
-				"stealth", 1 if 6 < len(p2.field) and p2.field[6].stealthed else 0,
-				"poisonous", 1 if 6 < len(p2.field) and p2.field[6].poisonous else 0,
-				"cantbetargeted", 1 if 6 < len(p2.field) and (p2.field[6].cant_be_targeted_by_abilities | | p2.field[6].cant_be_targeted_by_hero_powers) else 0,
-				"aura", 1 if 6 < len(p2.field) and p2.field[6].aura else 0,
-				"deathrattle", 1 if 6 < len(
-				    p2.field) and p2.field[6].has_deathrattle else 0,
-				"frozen", 1 if 6 < len(p2.field) and p2.field[6].frozen else 0,
-				"silenced", 1 if 6 < len(p2.field) and p2.field[6].silenced else 0
-			},
-			"myfield0canattack":  1 if 0 < len(p1.field) and p1.field[0].can_attack() else 0,
-			"myfield1canattack": 1 if 1 < len(p1.field) and p1.field[1].can_attack() else 0,
-			"myfield2canattack": 1 if 2 < len(p1.field) and p1.field[2].can_attack() else 0,
-			"myfield3canattack": 1 if 3 < len(p1.field) and p1.field[3].can_attack() else 0,
-			"myfield4canattack": 1 if 4 < len(p1.field) and p1.field[4].can_attack() else 0,
-			"myfield5canattack": 1 if 5 < len(p1.field) and p1.field[5].can_attack() else 0,
-			"myfield6canattack": 1 if 6 < len(p1.field) and p1.field[6].can_attack() else 0,
-			"myherocanattack": 1 if p1.hero.can_attack() else 0
-		}
-		return s
+    def __doMove(self, move, exceptionTester=[]):
+        """ Update a state by carrying out the given move.
+            Move format is [enum, index of selected card, target index, choice]
+            Returns True if game is over
+            Modified version of function from Ragowit's Fireplace fork
+        """
+        # print("move %s" % move[0])
+
+        self.lastMovePlayed = move
+
+        current_player = self.game.current_player
+
+        if not self.game.step == Step.BEGIN_MULLIGAN:
+            if current_player.playstate != PlayState.PLAYING:
+                print("Attempt to execute move while current_player is in playstate: {}, move not executed".format(current_player.playstate.name))
+                print("Attempted move: {}, on board:".format(move))
+                self.render()
+                return
+
+            if current_player is self.game.player1:
+                self.playerJustMoved = 1
+            else:
+                self.playerJustMoved = 2
+
+        try:
+            if move[0] == Move.mulligan:
+                cards = [self.__currentMulliganer().choice.cards[i] for i in move[1]]
+                self.__currentMulliganer().choice.choose(*cards)
+                self.playerToMove = self.playerJustMoved
+                self.playerJustMoved = -(self.playerJustMoved - 1) + 2
+            elif move[0] == Move.end_turn:
+                self.game.end_turn()
+            elif move[0] == Move.hero_power:
+                heropower = current_player.hero.power
+                if move[2] is None:
+                    heropower.use()
+                else:
+                    heropower.use(target=heropower.targets[move[2]])
+            elif move[0] == Move.play_card:
+                card = current_player.hand[move[1]]
+                args = {'target': None, 'choose': None}
+                for i, k in enumerate(args.keys()):
+                    if len(move) > i + 2 and move[i+2] is not None:
+                        if k == 'target':
+                            args[k] = card.targets[move[i+2]]
+                        elif k == 'choose':
+                            args[k] = card.choose_cards[move[i+2]]
+                card.play(**args)
+            elif move[0] == Move.minion_attack:
+                minion = current_player.field[move[1]]
+                minion.attack(minion.targets[move[2]])
+            elif move[0] == Move.hero_attack:
+                hero = current_player.hero
+                hero.attack(hero.targets[move[2]])
+            elif move[0] == Move.choice:
+                current_player.choice.choose(current_player.choice.cards[move[1]])
+        except exceptions.GameOver:
+            return True
+        except Exception as e:
+            # print("Ran into exception: {} While executing move {} for player {}. Game State:".format(str(e), move, self.playerJustMoved))
+            # self.render()
+            exceptionTester.append(1) # array will eval to True
+        if not self.game.step == Step.BEGIN_MULLIGAN:
+            self.playerToMove = 1 if self.game.current_player is self.game.player1 else 2
+        return False
+
+    def __getMoves(self):
+        """ Get all possible moves from this state.
+            Modified version of function from Ragowit's Fireplace fork
+        """
+
+        if self.game.ended or self.game.current_player is None or self.game.current_player.playstate != PlayState.PLAYING:
+            return []
+
+        valid_moves = []
+
+        # Mulligan
+        if self.game.step == Step.BEGIN_MULLIGAN:
+            player = self.__currentMulliganer()
+            for s in indice_subsets(player.choice.cards):
+                valid_moves.append([Move.mulligan, s])
+            return valid_moves
+
+        current_player = self.game.current_player
+        if current_player.playstate != PlayState.PLAYING:
+            return []
+
+        # Choose card
+        if current_player.choice is not None:
+            for i in range(len(current_player.choice.cards)):
+                valid_moves.append([Move.choice, i])
+            return valid_moves
+
+        else:
+            # Play card
+            for card in current_player.hand:
+                dupe = False
+                for i in range(len(valid_moves)):
+                    if current_player.hand[valid_moves[i][1]].id == card.id:
+                        dupe = True
+                        break
+                if not dupe:
+                    if card.is_playable():
+                        if card.must_choose_one:
+                            for i in range(len(card.choose_cards)):
+                                if len(card.targets) > 0:
+                                    for t in range(len(card.targets)):
+                                        valid_moves.append(
+                                            [Move.play_card, current_player.hand.index(card), t, i])
+                                else:
+                                    valid_moves.append(
+                                        [Move.play_card, current_player.hand.index(card), None, i])
+                        elif len(card.targets) > 0:
+                            for t in range(len(card.targets)):
+                                valid_moves.append(
+                                    [Move.play_card, current_player.hand.index(card), t, None])
+                        else:
+                            valid_moves.append(
+                                [Move.play_card, current_player.hand.index(card), None, None])
+
+            # Hero Power
+            heropower = current_player.hero.power
+            if heropower.is_usable():
+                if len(heropower.targets) > 0:
+                    for t in range(len(heropower.targets)):
+                        valid_moves.append([Move.hero_power, None, t])
+                else:
+                    valid_moves.append([Move.hero_power, None, None])
+            # Minion Attack
+            for minion in current_player.field:
+                if minion.can_attack():
+                    for t in range(len(minion.targets)):
+                        valid_moves.append(
+                            [Move.minion_attack, current_player.field.index(minion), t])
+
+            # Hero Attack
+            hero = current_player.hero
+            if hero.can_attack():
+                for t in range(len(hero.targets)):
+                    valid_moves.append([Move.hero_attack, None, t])
+
+            valid_moves.append([Move.end_turn])
+        return valid_moves
+
+    def _get_reward(self):
+        """ Get the current reward, from the perspective of the player who just moved
+            1 for win, -1 for loss
+            0 if game is not over
+        """
+        player=self.playerJustMoved
+        if self.players_ordered[0].hero.health <= 0 and self.players_ordered[1].hero.health <= 0:  # tie
+            return 0.1
+        elif self.players_ordered[player - 1].hero.health <= 0:  # loss
+            return -1
+        elif self.players_ordered[2 - player].hero.health <= 0:  # win
+            return 1
+        else:
+            return 0
+
+    def _get_state(self):
+        game=self.game
+        player=self.players_ordered[self.playerToMove - 1]
+        p1=player
+        p2=player.opponent
+        s={
+            "myhero": p1.hero.card_class-1,
+            "opphero": p2.hero.card_class-1,
+            "myhealth": p1.hero.health,
+            "opphealth": p2.hero.health,
+            "myarmor": p1.hero.armor,
+            "opparmor": p2.hero.armor,
+            "myweaponatt": p1.weapon.atk if p1.weapon else 0,
+            "oppweaponatt": p2.weapon.damage if p2.weapon else 0,
+            "myweapondur": p1.weapon.durability if p1.weapon else 0,
+            "oppweapondur": p2.weapon.durability if p2.weapon else 0, 
+            "myheropoweravail": p1.hero.power.is_usable() * 1,
+            "myunusedmanacrystals": p1.mana,
+            "myusedmanacrystals": p1.max_mana-p1.mana,
+            "oppcrystals": p2.max_mana,
+            "mynumcardsinhand": len(p1.hand),
+            "oppnumcardsinhand": len(p2.hand),
+            "mynumminions": len(p1.field),
+            "oppnumminions": len(p2.field),
+            "mynumsecrets": len(p1.secrets),
+            "oppnumsecrets": len(p2.secrets),
+            "myhand0": implemented_cards.index(p1.hand[0]),
+            "myhand1": implemented_cards.index(p1.hand[1]),
+            "myhand2": implemented_cards.index(p1.hand[2]),
+            "myhand3": implemented_cards.index(p1.hand[3]),
+            "myhand4": implemented_cards.index(p1.hand[4]),
+            "myhand5": implemented_cards.index(p1.hand[5]),
+            "myhand6": implemented_cards.index(p1.hand[6]),
+            "myhand7": implemented_cards.index(p1.hand[7]),
+            "myhand8": implemented_cards.index(p1.hand[8]),
+            "myhand9": implemented_cards.index(p1.hand[9]),
+            "myfield0": implemented_cards.index(p1.field[0]),
+            "myfield1": implemented_cards.index(p1.field[1]),
+            "myfield2": implemented_cards.index(p1.field[2]),
+            "myfield3": implemented_cards.index(p1.field[3]),
+            "myfield4": implemented_cards.index(p1.field[4]),
+            "myfield5": implemented_cards.index(p1.field[5]),
+            "myfield6": implemented_cards.index(p1.field[6]),
+            "oppfield0": implemented_cards.index(p2.field[0]),
+            "oppfield1": implemented_cards.index(p2.field[1]),
+            "oppfield2": implemented_cards.index(p2.field[2]),
+            "oppfield3": implemented_cards.index(p2.field[3]),
+            "oppfield4": implemented_cards.index(p2.field[4]),
+            "oppfield5": implemented_cards.index(p2.field[5]),
+            "oppfield6": implemented_cards.index(p2.field[6]),
+            "myhand0att": p1.hand[0].atk if 0 < len(p1.hand) else 0,
+            "myhand1att": p1.hand[1].atk if 1 < len(p1.hand) else 0,
+            "myhand2att": p1.hand[2].atk if 2 < len(p1.hand) else 0,
+            "myhand3att": p1.hand[3].atk if 3 < len(p1.hand) else 0,
+            "myhand4att": p1.hand[4].atk if 4 < len(p1.hand) else 0,
+            "myhand5att": p1.hand[5].atk if 5 < len(p1.hand) else 0,
+            "myhand6att": p1.hand[6].atk if 6 < len(p1.hand) else 0,
+            "myhand7att": p1.hand[7].atk if 7 < len(p1.hand) else 0,
+            "myhand8att": p1.hand[8].atk if 8 < len(p1.hand) else 0,
+            "myhand9att": p1.hand[9].atk if 9 < len(p1.hand) else 0,
+            "myfield0att": p1.field[0].atk if 0 < len(p1.field) else 0,
+            "myfield1att": p1.field[1].atk if 1 < len(p1.field) else 0,
+            "myfield2att": p1.field[2].atk if 2 < len(p1.field) else 0,
+            "myfield3att": p1.field[3].atk if 3 < len(p1.field) else 0,
+            "myfield4att": p1.field[4].atk if 4 < len(p1.field) else 0,
+            "myfield5att": p1.field[5].atk if 5 < len(p1.field) else 0,
+            "myfield6att": p1.field[6].atk if 6 < len(p1.field) else 0,
+            "oppfield0att": p2.field[0].atk if 0 < len(p2.field) else 0,
+            "oppfield1att": p2.field[0].atk if 0 < len(p2.field) else 0,
+            "oppfield2att": p2.field[0].atk if 0 < len(p2.field) else 0,
+            "oppfield3att": p2.field[0].atk if 0 < len(p2.field) else 0,
+            "oppfield4att": p2.field[0].atk if 0 < len(p2.field) else 0,
+            "oppfield5att": p2.field[0].atk if 0 < len(p2.field) else 0,
+            "oppfield6att": p2.field[0].atk if 0 < len(p2.field) else 0,
+            "myhand0def": p1.hand[0].health if 0 < len(p1.hand) else 0,
+            "myhand1def": p1.hand[1].health if 1 < len(p1.hand) else 0,
+            "myhand2def": p1.hand[2].health if 2 < len(p1.hand) else 0,
+            "myhand3def": p1.hand[3].health if 3 < len(p1.hand) else 0,
+            "myhand4def": p1.hand[4].health if 4 < len(p1.hand) else 0,
+            "myhand5def": p1.hand[5].health if 5 < len(p1.hand) else 0,
+            "myhand6def": p1.hand[6].health if 6 < len(p1.hand) else 0,
+            "myhand7def": p1.hand[7].health if 7 < len(p1.hand) else 0,
+            "myhand8def": p1.hand[8].health if 8 < len(p1.hand) else 0,
+            "myhand9def": p1.hand[9].health if 9 < len(p1.hand) else 0,
+            "myfield0def": p1.field[0].health if 0 < len(p1.field) else 0,
+            "myfield1def": p1.field[1].health if 1 < len(p1.field) else 0,
+            "myfield2def": p1.field[2].health if 2 < len(p1.field) else 0,
+            "myfield3def": p1.field[3].health if 3 < len(p1.field) else 0,
+            "myfield4def": p1.field[4].health if 4 < len(p1.field) else 0,
+            "myfield5def": p1.field[5].health if 5 < len(p1.field) else 0,
+            "myfield6def": p1.field[6].health if 6 < len(p1.field) else 0,
+            "oppfield0def": p2.field[0].health if 0 < len(p2.field) else 0,
+            "oppfield1def": p2.field[0].health if 0 < len(p2.field) else 0,
+            "oppfield2def": p2.field[0].health if 0 < len(p2.field) else 0,
+            "oppfield3def": p2.field[0].health if 0 < len(p2.field) else 0,
+            "oppfield4def": p2.field[0].health if 0 < len(p2.field) else 0,
+            "oppfield5def": p2.field[0].health if 0 < len(p2.field) else 0,
+            "oppfield6def": p2.field[0].health if 0 < len(p2.field) else 0,
+            "myhand0effects": {
+                "windfury", 1 if 0 < len(p1.hand) and p1.hand[0].windfury else 0,
+                "divineshield", 1 if 0 < len(p1.hand) and p1.hand[0].divine_shield else 0,
+                "charge", 1 if 0 < len(p1.hand) and p1.hand[0].charge else 0,
+                "taunt", 1 if 0 < len(p1.hand) and p1.hand[0].taunt else 0,
+                "stealth", 1 if 0 < len(p1.hand) and p1.hand[0].stealthed else 0,
+                "poisonous", 1 if 0 < len(p1.hand) and p1.hand[0].poisonous else 0,
+                "cantbetargeted", 1 if 0 < len(p1.hand) and (p1.hand[0].cant_be_targeted_by_abilities or p1.hand[0].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 0 < len(p1.hand) and p1.hand[0].aura else 0,
+                "deathrattle", 1 if 0 < len(p1.hand) and p1.hand[0].has_deathrattle else 0,
+                "frozen", 1 if 0 < len(p1.hand) and p1.hand[0].frozen else 0,
+                "silenced", 1 if 0 < len(p1.hand) and p1.hand[0].silenced else 0
+            },
+            "myhand1effects": {
+                "windfury", 1 if 1 < len(p1.hand) and p1.hand[1].windfury else 0,
+                "divineshield", 1 if 1 < len(p1.hand) and p1.hand[1].divine_shield else 0,
+                "charge", 1 if 1 < len(p1.hand) and p1.hand[1].charge else 0,
+                "taunt", 1 if 1 < len(p1.hand) and p1.hand[1].taunt else 0,
+                "stealth", 1 if 1 < len(p1.hand) and p1.hand[1].stealthed else 0,
+                "poisonous", 1 if 1 < len(p1.hand) and p1.hand[1].poisonous else 0,
+                "cantbetargeted", 1 if 1 < len(p1.hand) and (p1.hand[1].cant_be_targeted_by_abilities or p1.hand[1].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 1 < len(p1.hand) and p1.hand[1].aura else 0,
+                "deathrattle", 1 if 1 < len(p1.hand) and p1.hand[1].has_deathrattle else 0,
+                "frozen", 1 if 1 < len(p1.hand) and p1.hand[1].frozen else 0,
+                "silenced", 1 if 1 < len(p1.hand) and p1.hand[1].silenced else 0
+            },
+            "myhand2effects": {
+                "windfury", 1 if 2 < len(p1.hand) and p1.hand[2].windfury else 0,
+                "divineshield", 1 if 2 < len(p1.hand) and p1.hand[2].divine_shield else 0,
+                "charge", 1 if 2 < len(p1.hand) and p1.hand[2].charge else 0,
+                "taunt", 1 if 2 < len(p1.hand) and p1.hand[2].taunt else 0,
+                "stealth", 1 if 2 < len(p1.hand) and p1.hand[2].stealthed else 0,
+                "poisonous", 1 if 2 < len(p1.hand) and p1.hand[2].poisonous else 0,
+                "cantbetargeted", 1 if 2 < len(p1.hand) and (p1.hand[2].cant_be_targeted_by_abilities or p1.hand[2].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 2 < len(p1.hand) and p1.hand[2].aura else 0,
+                "deathrattle", 1 if 2 < len(p1.hand) and p1.hand[2].has_deathrattle else 0,
+                "frozen", 1 if 2 < len(p1.hand) and p1.hand[2].frozen else 0,
+                "silenced", 1 if 2 < len(p1.hand) and p1.hand[2].silenced else 0
+            },
+            "myhand3effects": {
+                "windfury", 1 if 3 < len(p1.hand) and p1.hand[3].windfury else 0,
+                "divineshield", 1 if 3 < len(p1.hand) and p1.hand[3].divine_shield else 0,
+                "charge", 1 if 3 < len(p1.hand) and p1.hand[3].charge else 0,
+                "taunt", 1 if 3 < len(p1.hand) and p1.hand[3].taunt else 0,
+                "stealth", 1 if 3 < len(p1.hand) and p1.hand[3].stealthed else 0,
+                "poisonous", 1 if 3 < len(p1.hand) and p1.hand[3].poisonous else 0,
+                "cantbetargeted", 1 if 3 < len(p1.hand) and (p1.hand[3].cant_be_targeted_by_abilities or p1.hand[3].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 3 < len(p1.hand) and p1.hand[3].aura else 0,
+                "deathrattle", 1 if 3 < len(p1.hand) and p1.hand[3].has_deathrattle else 0,
+                "frozen", 1 if 3 < len(p1.hand) and p1.hand[3].frozen else 0,
+                "silenced", 1 if 3 < len(p1.hand) and p1.hand[3].silenced else 0
+            },
+            "myhand4effects": {
+                "windfury", 1 if 4 < len(p1.hand) and p1.hand[4].windfury else 0,
+                "divineshield", 1 if 4 < len(p1.hand) and p1.hand[4].divine_shield else 0,
+                "charge", 1 if 4 < len(p1.hand) and p1.hand[4].charge else 0,
+                "taunt", 1 if 4 < len(p1.hand) and p1.hand[4].taunt else 0,
+                "stealth", 1 if 4 < len(p1.hand) and p1.hand[4].stealthed else 0,
+                "poisonous", 1 if 4 < len(p1.hand) and p1.hand[4].poisonous else 0,
+                "cantbetargeted", 1 if 4 < len(p1.hand) and (p1.hand[4].cant_be_targeted_by_abilities or p1.hand[4].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 4 < len(p1.hand) and p1.hand[4].aura else 0,
+                "deathrattle", 1 if 4 < len(p1.hand) and p1.hand[4].has_deathrattle else 0,
+                "frozen", 1 if 4 < len(p1.hand) and p1.hand[4].frozen else 0,
+                "silenced", 1 if 4 < len(p1.hand) and p1.hand[4].silenced else 0
+            },
+            "myhand5effects": {
+                "windfury", 1 if 5 < len(p1.hand) and p1.hand[5].windfury else 0,
+                "divineshield", 1 if 5 < len(p1.hand) and p1.hand[5].divine_shield else 0,
+                "charge", 1 if 5 < len(p1.hand) and p1.hand[5].charge else 0,
+                "taunt", 1 if 5 < len(p1.hand) and p1.hand[5].taunt else 0,
+                "stealth", 1 if 5 < len(p1.hand) and p1.hand[5].stealthed else 0,
+                "poisonous", 1 if 5 < len(p1.hand) and p1.hand[5].poisonous else 0,
+                "cantbetargeted", 1 if 5 < len(p1.hand) and (p1.hand[5].cant_be_targeted_by_abilities or p1.hand[5].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 5 < len(p1.hand) and p1.hand[5].aura else 0,
+                "deathrattle", 1 if 5 < len(p1.hand) and p1.hand[5].has_deathrattle else 0,
+                "frozen", 1 if 5 < len(p1.hand) and p1.hand[5].frozen else 0,
+                "silenced", 1 if 5 < len(p1.hand) and p1.hand[5].silenced else 0
+            },
+            "myhand6effects": {
+                "windfury", 1 if 6 < len(p1.hand) and p1.hand[6].windfury else 0,
+                "divineshield", 1 if 6 < len(p1.hand) and p1.hand[6].divine_shield else 0,
+                "charge", 1 if 6 < len(p1.hand) and p1.hand[6].charge else 0,
+                "taunt", 1 if 6 < len(p1.hand) and p1.hand[6].taunt else 0,
+                "stealth", 1 if 6 < len(p1.hand) and p1.hand[6].stealthed else 0,
+                "poisonous", 1 if 6 < len(p1.hand) and p1.hand[6].poisonous else 0,
+                "cantbetargeted", 1 if 6 < len(p1.hand) and (p1.hand[6].cant_be_targeted_by_abilities or p1.hand[6].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 6 < len(p1.hand) and p1.hand[6].aura else 0,
+                "deathrattle", 1 if 6 < len(p1.hand) and p1.hand[6].has_deathrattle else 0,
+                "frozen", 1 if 6 < len(p1.hand) and p1.hand[6].frozen else 0,
+                "silenced", 1 if 6 < len(p1.hand) and p1.hand[6].silenced else 0
+            },
+            "myhand7effects": {
+                "windfury", 1 if 7 < len(p1.hand) and p1.hand[7].windfury else 0,
+                "divineshield", 1 if 7 < len(p1.hand) and p1.hand[7].divine_shield else 0,
+                "charge", 1 if 7 < len(p1.hand) and p1.hand[7].charge else 0,
+                "taunt", 1 if 7 < len(p1.hand) and p1.hand[7].taunt else 0,
+                "stealth", 1 if 7 < len(p1.hand) and p1.hand[7].stealthed else 0,
+                "poisonous", 1 if 7 < len(p1.hand) and p1.hand[7].poisonous else 0,
+                "cantbetargeted", 1 if 7 < len(p1.hand) and (p1.hand[7].cant_be_targeted_by_abilities or p1.hand[7].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 7 < len(p1.hand) and p1.hand[7].aura else 0,
+                "deathrattle", 1 if 7 < len(p1.hand) and p1.hand[7].has_deathrattle else 0,
+                "frozen", 1 if 7 < len(p1.hand) and p1.hand[7].frozen else 0,
+                "silenced", 1 if 7 < len(p1.hand) and p1.hand[7].silenced else 0
+            },
+            "myhand8effects": {
+                "windfury", 1 if 8 < len(p1.hand) and p1.hand[8].windfury else 0,
+                "divineshield", 1 if 8 < len(p1.hand) and p1.hand[8].divine_shield else 0,
+                "charge", 1 if 8 < len(p1.hand) and p1.hand[8].charge else 0,
+                "taunt", 1 if 8 < len(p1.hand) and p1.hand[8].taunt else 0,
+                "stealth", 1 if 8 < len(p1.hand) and p1.hand[8].stealthed else 0,
+                "poisonous", 1 if 8 < len(p1.hand) and p1.hand[8].poisonous else 0,
+                "cantbetargeted", 1 if 8 < len(p1.hand) and (p1.hand[8].cant_be_targeted_by_abilities or p1.hand[8].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 8 < len(p1.hand) and p1.hand[8].aura else 0,
+                "deathrattle", 1 if 8 < len(p1.hand) and p1.hand[8].has_deathrattle else 0,
+                "frozen", 1 if 8 < len(p1.hand) and p1.hand[8].frozen else 0,
+                "silenced", 1 if 8 < len(p1.hand) and p1.hand[8].silenced else 0
+            },
+            "myhand9effects": {
+                "windfury", 1 if 9 < len(p1.hand) and p1.hand[9].windfury else 0,
+                "divineshield", 1 if 9 < len(p1.hand) and p1.hand[9].divine_shield else 0,
+                "charge", 1 if 9 < len(p1.hand) and p1.hand[9].charge else 0,
+                "taunt", 1 if 9 < len(p1.hand) and p1.hand[9].taunt else 0,
+                "stealth", 1 if 9 < len(p1.hand) and p1.hand[9].stealthed else 0,
+                "poisonous", 1 if 9 < len(p1.hand) and p1.hand[9].poisonous else 0,
+                "cantbetargeted", 1 if 9 < len(p1.hand) and (p1.hand[9].cant_be_targeted_by_abilities or p1.hand[9].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 9 < len(p1.hand) and p1.hand[9].aura else 0,
+                "deathrattle", 1 if 9 < len(p1.hand) and p1.hand[9].has_deathrattle else 0,
+                "frozen", 1 if 9 < len(p1.hand) and p1.hand[9].frozen else 0,
+                "silenced", 1 if 9 < len(p1.hand) and p1.hand[9].silenced else 0
+            },
+            "myfield0effects": {
+                "windfury", 1 if 0 < len(p1.field) and p1.field[0].windfury else 0,
+                "divineshield", 1 if 0 < len(
+                    p1.field) and p1.field[0].divine_shield else 0,
+                "charge", 1 if 0 < len(p1.field) and p1.field[0].charge else 0,
+                "taunt", 1 if 0 < len(p1.field) and p1.field[0].taunt else 0,
+                "stealth", 1 if 0 < len(p1.field) and p1.field[0].stealthed else 0,
+                "poisonous", 1 if 0 < len(p1.field) and p1.field[0].poisonous else 0,
+                "cantbetargeted", 1 if 0 < len(p1.field) and (p1.field[0].cant_be_targeted_by_abilities or p1.field[0].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 0 < len(p1.field) and p1.field[0].aura else 0,
+                "deathrattle", 1 if 0 < len(
+                    p1.field) and p1.field[0].has_deathrattle else 0,
+                "frozen", 1 if 0 < len(p1.field) and p1.field[0].frozen else 0,
+                "silenced", 1 if 0 < len(p1.field) and p1.field[0].silenced else 0
+            },
+            "myfield1effects": {
+                "windfury", 1 if 1 < len(p1.field) and p1.field[1].windfury else 0,
+                "divineshield", 1 if 1 < len(
+                    p1.field) and p1.field[1].divine_shield else 0,
+                "charge", 1 if 1 < len(p1.field) and p1.field[1].charge else 0,
+                "taunt", 1 if 1 < len(p1.field) and p1.field[1].taunt else 0,
+                "stealth", 1 if 1 < len(p1.field) and p1.field[1].stealthed else 0,
+                "poisonous", 1 if 1 < len(p1.field) and p1.field[1].poisonous else 0,
+                "cantbetargeted", 1 if 1 < len(p1.field) and (p1.field[1].cant_be_targeted_by_abilities or p1.field[1].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 1 < len(p1.field) and p1.field[1].aura else 0,
+                "deathrattle", 1 if 1 < len(
+                    p1.field) and p1.field[1].has_deathrattle else 0,
+                "frozen", 1 if 1 < len(p1.field) and p1.field[1].frozen else 0,
+                "silenced", 1 if 1 < len(p1.field) and p1.field[1].silenced else 0
+            },
+            "myfield2effects": {
+                "windfury", 1 if 2 < len(p1.field) and p1.field[2].windfury else 0,
+                "divineshield", 1 if 2 < len(
+                    p1.field) and p1.field[2].divine_shield else 0,
+                "charge", 1 if 2 < len(p1.field) and p1.field[2].charge else 0,
+                "taunt", 1 if 2 < len(p1.field) and p1.field[2].taunt else 0,
+                "stealth", 1 if 2 < len(p1.field) and p1.field[2].stealthed else 0,
+                "poisonous", 1 if 2 < len(p1.field) and p1.field[2].poisonous else 0,
+                "cantbetargeted", 1 if 2 < len(p1.field) and (p1.field[2].cant_be_targeted_by_abilities or p1.field[2].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 2 < len(p1.field) and p1.field[2].aura else 0,
+                "deathrattle", 1 if 2 < len(
+                    p1.field) and p1.field[2].has_deathrattle else 0,
+                "frozen", 1 if 2 < len(p1.field) and p1.field[2].frozen else 0,
+                "silenced", 1 if 2 < len(p1.field) and p1.field[2].silenced else 0
+            },
+            "myfield3effects": {
+                "windfury", 1 if 3 < len(p1.field) and p1.field[3].windfury else 0,
+                "divineshield", 1 if 3 < len(
+                    p1.field) and p1.field[3].divine_shield else 0,
+                "charge", 1 if 3 < len(p1.field) and p1.field[3].charge else 0,
+                "taunt", 1 if 3 < len(p1.field) and p1.field[3].taunt else 0,
+                "stealth", 1 if 3 < len(p1.field) and p1.field[3].stealthed else 0,
+                "poisonous", 1 if 3 < len(p1.field) and p1.field[3].poisonous else 0,
+                "cantbetargeted", 1 if 3 < len(p1.field) and (p1.field[3].cant_be_targeted_by_abilities or p1.field[3].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 3 < len(p1.field) and p1.field[3].aura else 0,
+                "deathrattle", 1 if 3 < len(
+                    p1.field) and p1.field[3].has_deathrattle else 0,
+                "frozen", 1 if 3 < len(p1.field) and p1.field[3].frozen else 0,
+                "silenced", 1 if 3 < len(p1.field) and p1.field[3].silenced else 0
+            },
+            "myfield4effects": {
+                "windfury", 1 if 4 < len(p1.field) and p1.field[4].windfury else 0,
+                "divineshield", 1 if 4 < len(
+                    p1.field) and p1.field[4].divine_shield else 0,
+                "charge", 1 if 4 < len(p1.field) and p1.field[4].charge else 0,
+                "taunt", 1 if 4 < len(p1.field) and p1.field[4].taunt else 0,
+                "stealth", 1 if 4 < len(p1.field) and p1.field[4].stealthed else 0,
+                "poisonous", 1 if 4 < len(p1.field) and p1.field[4].poisonous else 0,
+                "cantbetargeted", 1 if 4 < len(p1.field) and (p1.field[4].cant_be_targeted_by_abilities or p1.field[4].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 4 < len(p1.field) and p1.field[4].aura else 0,
+                "deathrattle", 1 if 4 < len(
+                    p1.field) and p1.field[4].has_deathrattle else 0,
+                "frozen", 1 if 4 < len(p1.field) and p1.field[4].frozen else 0,
+                "silenced", 1 if 4 < len(p1.field) and p1.field[4].silenced else 0
+            },
+            "myfield5effects": {
+                "windfury", 1 if 5 < len(p1.field) and p1.field[5].windfury else 0,
+                "divineshield", 1 if 5 < len(
+                    p1.field) and p1.field[5].divine_shield else 0,
+                "charge", 1 if 5 < len(p1.field) and p1.field[5].charge else 0,
+                "taunt", 1 if 5 < len(p1.field) and p1.field[5].taunt else 0,
+                "stealth", 1 if 5 < len(p1.field) and p1.field[5].stealthed else 0,
+                "poisonous", 1 if 5 < len(p1.field) and p1.field[5].poisonous else 0,
+                "cantbetargeted", 1 if 5 < len(p1.field) and (p1.field[5].cant_be_targeted_by_abilities or p1.field[5].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 5 < len(p1.field) and p1.field[5].aura else 0,
+                "deathrattle", 1 if 5 < len(
+                    p1.field) and p1.field[5].has_deathrattle else 0,
+                "frozen", 1 if 5 < len(p1.field) and p1.field[5].frozen else 0,
+                "silenced", 1 if 5 < len(p1.field) and p1.field[5].silenced else 0
+            },
+            "myfield6effects": {
+                "windfury", 1 if 6 < len(p1.field) and p1.field[6].windfury else 0,
+                "divineshield", 1 if 6 < len(
+                    p1.field) and p1.field[6].divine_shield else 0,
+                "charge", 1 if 6 < len(p1.field) and p1.field[6].charge else 0,
+                "taunt", 1 if 6 < len(p1.field) and p1.field[6].taunt else 0,
+                "stealth", 1 if 6 < len(p1.field) and p1.field[6].stealthed else 0,
+                "poisonous", 1 if 6 < len(p1.field) and p1.field[6].poisonous else 0,
+                "cantbetargeted", 1 if 6 < len(p1.field) and (p1.field[6].cant_be_targeted_by_abilities or p1.field[6].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 6 < len(p1.field) and p1.field[6].aura else 0,
+                "deathrattle", 1 if 6 < len(
+                    p1.field) and p1.field[6].has_deathrattle else 0,
+                "frozen", 1 if 6 < len(p1.field) and p1.field[6].frozen else 0,
+                "silenced", 1 if 6 < len(p1.field) and p1.field[6].silenced else 0
+            },
+            "oppfield0effects": {
+                "windfury", 1 if 0 < len(p2.field) and p2.field[0].windfury else 0,
+                "divineshield", 1 if 0 < len(
+                    p2.field) and p2.field[0].divine_shield else 0,
+                "charge", 1 if 0 < len(p2.field) and p2.field[0].charge else 0,
+                "taunt", 1 if 0 < len(p2.field) and p2.field[0].taunt else 0,
+                "stealth", 1 if 0 < len(p2.field) and p2.field[0].stealthed else 0,
+                "poisonous", 1 if 0 < len(p2.field) and p2.field[0].poisonous else 0,
+                "cantbetargeted", 1 if 0 < len(p2.field) and (p2.field[0].cant_be_targeted_by_abilities or p2.field[0].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 0 < len(p2.field) and p2.field[0].aura else 0,
+                "deathrattle", 1 if 0 < len(
+                    p2.field) and p2.field[0].has_deathrattle else 0,
+                "frozen", 1 if 0 < len(p2.field) and p2.field[0].frozen else 0,
+                "silenced", 1 if 0 < len(p2.field) and p2.field[0].silenced else 0
+            },
+            "oppfield1effects": {
+                "windfury", 1 if 1 < len(p2.field) and p2.field[1].windfury else 0,
+                "divineshield", 1 if 1 < len(
+                    p2.field) and p2.field[1].divine_shield else 0,
+                "charge", 1 if 1 < len(p2.field) and p2.field[1].charge else 0,
+                "taunt", 1 if 1 < len(p2.field) and p2.field[1].taunt else 0,
+                "stealth", 1 if 1 < len(p2.field) and p2.field[1].stealthed else 0,
+                "poisonous", 1 if 1 < len(p2.field) and p2.field[1].poisonous else 0,
+                "cantbetargeted", 1 if 1 < len(p2.field) and (p2.field[1].cant_be_targeted_by_abilities or p2.field[1].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 1 < len(p2.field) and p2.field[1].aura else 0,
+                "deathrattle", 1 if 1 < len(
+                    p2.field) and p2.field[1].has_deathrattle else 0,
+                "frozen", 1 if 1 < len(p2.field) and p2.field[1].frozen else 0,
+                "silenced", 1 if 1 < len(p2.field) and p2.field[1].silenced else 0
+            },
+            "oppfield2effects": {
+                "windfury", 1 if 2 < len(p2.field) and p2.field[2].windfury else 0,
+                "divineshield", 1 if 2 < len(
+                    p2.field) and p2.field[2].divine_shield else 0,
+                "charge", 1 if 2 < len(p2.field) and p2.field[2].charge else 0,
+                "taunt", 1 if 2 < len(p2.field) and p2.field[2].taunt else 0,
+                "stealth", 1 if 2 < len(p2.field) and p2.field[2].stealthed else 0,
+                "poisonous", 1 if 2 < len(p2.field) and p2.field[2].poisonous else 0,
+                "cantbetargeted", 1 if 2 < len(p2.field) and (p2.field[2].cant_be_targeted_by_abilities or p2.field[2].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 2 < len(p2.field) and p2.field[2].aura else 0,
+                "deathrattle", 1 if 2 < len(
+                    p2.field) and p2.field[2].has_deathrattle else 0,
+                "frozen", 1 if 2 < len(p2.field) and p2.field[2].frozen else 0,
+                "silenced", 1 if 2 < len(p2.field) and p2.field[2].silenced else 0
+            },
+            "oppfield3effects": {
+                "windfury", 1 if 3 < len(p2.field) and p2.field[3].windfury else 0,
+                "divineshield", 1 if 3 < len(
+                    p2.field) and p2.field[3].divine_shield else 0,
+                "charge", 1 if 3 < len(p2.field) and p2.field[3].charge else 0,
+                "taunt", 1 if 3 < len(p2.field) and p2.field[3].taunt else 0,
+                "stealth", 1 if 3 < len(p2.field) and p2.field[3].stealthed else 0,
+                "poisonous", 1 if 3 < len(p2.field) and p2.field[3].poisonous else 0,
+                "cantbetargeted", 1 if 3 < len(p2.field) and (p2.field[3].cant_be_targeted_by_abilities or p2.field[3].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 3 < len(p2.field) and p2.field[3].aura else 0,
+                "deathrattle", 1 if 3 < len(
+                    p2.field) and p2.field[3].has_deathrattle else 0,
+                "frozen", 1 if 3 < len(p2.field) and p2.field[3].frozen else 0,
+                "silenced", 1 if 3 < len(p2.field) and p2.field[3].silenced else 0
+            },
+            "oppfield4effects": {
+                "windfury", 1 if 4 < len(p2.field) and p2.field[4].windfury else 0,
+                "divineshield", 1 if 4 < len(
+                    p2.field) and p2.field[4].divine_shield else 0,
+                "charge", 1 if 4 < len(p2.field) and p2.field[4].charge else 0,
+                "taunt", 1 if 4 < len(p2.field) and p2.field[4].taunt else 0,
+                "stealth", 1 if 4 < len(p2.field) and p2.field[4].stealthed else 0,
+                "poisonous", 1 if 4 < len(p2.field) and p2.field[4].poisonous else 0,
+                "cantbetargeted", 1 if 4 < len(p2.field) and (p2.field[4].cant_be_targeted_by_abilities or p2.field[4].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 4 < len(p2.field) and p2.field[4].aura else 0,
+                "deathrattle", 1 if 4 < len(
+                    p2.field) and p2.field[4].has_deathrattle else 0,
+                "frozen", 1 if 4 < len(p2.field) and p2.field[4].frozen else 0,
+                "silenced", 1 if 4 < len(p2.field) and p2.field[4].silenced else 0
+            },
+            "oppfield5effects": {
+                "windfury", 1 if 5 < len(p2.field) and p2.field[5].windfury else 0,
+                "divineshield", 1 if 5 < len(
+                    p2.field) and p2.field[5].divine_shield else 0,
+                "charge", 1 if 5 < len(p2.field) and p2.field[5].charge else 0,
+                "taunt", 1 if 5 < len(p2.field) and p2.field[5].taunt else 0,
+                "stealth", 1 if 5 < len(p2.field) and p2.field[5].stealthed else 0,
+                "poisonous", 1 if 5 < len(p2.field) and p2.field[5].poisonous else 0,
+                "cantbetargeted", 1 if 5 < len(p2.field) and (p2.field[5].cant_be_targeted_by_abilities or p2.field[5].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 5 < len(p2.field) and p2.field[5].aura else 0,
+                "deathrattle", 1 if 5 < len(
+                    p2.field) and p2.field[5].has_deathrattle else 0,
+                "frozen", 1 if 5 < len(p2.field) and p2.field[5].frozen else 0,
+                "silenced", 1 if 5 < len(p2.field) and p2.field[5].silenced else 0
+            },
+            "oppfield6effects": {
+                "windfury", 1 if 6 < len(p2.field) and p2.field[6].windfury else 0,
+                "divineshield", 1 if 6 < len(
+                    p2.field) and p2.field[6].divine_shield else 0,
+                "charge", 1 if 6 < len(p2.field) and p2.field[6].charge else 0,
+                "taunt", 1 if 6 < len(p2.field) and p2.field[6].taunt else 0,
+                "stealth", 1 if 6 < len(p2.field) and p2.field[6].stealthed else 0,
+                "poisonous", 1 if 6 < len(p2.field) and p2.field[6].poisonous else 0,
+                "cantbetargeted", 1 if 6 < len(p2.field) and (p2.field[6].cant_be_targeted_by_abilities or p2.field[6].cant_be_targeted_by_hero_powers) else 0,
+                "aura", 1 if 6 < len(p2.field) and p2.field[6].aura else 0,
+                "deathrattle", 1 if 6 < len(
+                    p2.field) and p2.field[6].has_deathrattle else 0,
+                "frozen", 1 if 6 < len(p2.field) and p2.field[6].frozen else 0,
+                "silenced", 1 if 6 < len(p2.field) and p2.field[6].silenced else 0
+            },
+            "myfield0canattack":  1 if 0 < len(p1.field) and p1.field[0].can_attack() else 0,
+            "myfield1canattack": 1 if 1 < len(p1.field) and p1.field[1].can_attack() else 0,
+            "myfield2canattack": 1 if 2 < len(p1.field) and p1.field[2].can_attack() else 0,
+            "myfield3canattack": 1 if 3 < len(p1.field) and p1.field[3].can_attack() else 0,
+            "myfield4canattack": 1 if 4 < len(p1.field) and p1.field[4].can_attack() else 0,
+            "myfield5canattack": 1 if 5 < len(p1.field) and p1.field[5].can_attack() else 0,
+            "myfield6canattack": 1 if 6 < len(p1.field) and p1.field[6].can_attack() else 0,
+            "myherocanattack": 1 if p1.hero.can_attack() else 0
+        }
+        return s
