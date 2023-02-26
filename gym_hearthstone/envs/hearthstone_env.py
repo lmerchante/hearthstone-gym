@@ -5,8 +5,8 @@ from fireplace.game import Game
 from fireplace.deck import Deck
 from fireplace.utils import get_script_definition, random_draft
 from hearthstone.enums import PlayState, Step, Mulligan, State, CardClass, Race, CardSet, CardType
-from gym import spaces
-import gym
+from gymnasium import spaces
+import gymnasium as gym
 import re
 import string
 import random
