@@ -90,8 +90,7 @@ UNIMPLEMENTED_CARDS = len(unimplemented_cards)
 
 print("IMPLEMENTED CARDS: "+str(IMPLEMENTED_CARDS))
 print("UNIMPLEMENTED CARDS: "+str(UNIMPLEMENTED_CARDS))
-print(type(implemented_cards[0]))
-print(implemented_cards[0])
+
 
 class AutoNumber(Enum):
 	def __new__(cls):
