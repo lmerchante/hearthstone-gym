@@ -51,14 +51,38 @@ DUMMY_CARDS = (
     "NEW1_018e",  # Treasure Crazed (Bloodsail Raider)
 )
 
+# ============================================
+# Limpieza de la descripción de algunas cartas
+# ============================================
 cards.db.initialize()
 for id in sorted(cards.db):
     card = cards.db[id]
     ret = card.description
-    ret = re.sub("<i>.+</i>", "", ret)
-    ret = re.sub("(<b>|</b>)", "", ret)
-    ret = re.sub("(" + "|".join(SOLVED_KEYWORDS) + ")", "", ret)
-    ret = re.sub("<[^>]*>", "", ret)
+    # ret = re.sub("<i>.+</i>", "", ret)  # elimina texto en cursiva había algunas etiquetas con </I>
+    ret = re.sub("<i>.+</i>", "", ret,flags=re.IGNORECASE)
+    # ret = re.sub("(<b>|</b>)", "", ret) #elimina texto en negrita, cuando aparecían 2 secuencias en negrita no eliminaba todas
+    ret = re.sub(r"<\/?b[^>]*>", "", ret)
+    ret = re.sub("(" + "|".join(SOLVED_KEYWORDS) + ")", "", ret)  #elimina todas las palabras de SOLVED_KEYWORDS
+    ret = re.sub("<[^>]*>", "", ret) #elimina otras etiquetas HTML, pero despues de corregir lo anterior, no aparecen más
+
+    """
+    La mayoría de las cartas no traen una descripción, pero hay algunas que sí. Este código
+    Eliminar algunas etiquetas HTML de la descripción como:
+       - <b>Secret:</b> When a friendly minion dies, summon a random minion with the same Cost.
+       - Secret: When a friendly minion dies, summon a random minion with the same Cost.
+    Elimina las cursivas:
+       - Add 2 random cards to your hand <i>(from your opponent's class)</i>.
+       - Add 2 random cards to your hand .
+    Algunas keywords:
+        - Transform a minion into a 4/2 Boar with <b>Charge</b>.
+        - Transform a minion into a 4/2 Boar with .
+        - <b>Inspire:</b> Gain <b>Spell Damage +1</b>.
+        - Inspire: Gain .
+    Algunas el resto de etiquetas HTML:
+        - Start of Game: Give your party +4 Nature and Shadow Damage<b/>. Give your Horde characters +8/+8.
+        - Start of Game: Give your party +4 Nature and Shadow Damage. Give your Horde characters +8/+8.
+    
+    """
     exclude_chars = string.punctuation + string.whitespace
     ret = "".join([ch for ch in ret if ch not in exclude_chars])
     description = ret
@@ -73,7 +97,9 @@ for id in sorted(cards.db):
     if id in DUMMY_CARDS:
         implemented = True
 
-    carddef = get_script_definition(id)
+    carddef = get_script_definition(id) # Mira si la carta tiene un script definition
+                                        # https://github.com/jleclanche/fireplace/blob/58c5c60dc4502956d1a7a12c616c9b6201598edb/fireplace/utils.py#L103
+
     if carddef:
         implemented = True
 
@@ -90,8 +116,7 @@ UNIMPLEMENTED_CARDS = len(unimplemented_cards)
 
 print("IMPLEMENTED CARDS: "+str(IMPLEMENTED_CARDS))
 print("UNIMPLEMENTED CARDS: "+str(UNIMPLEMENTED_CARDS))
-print(type(implemented_cards[0]))
-print(implemented_cards[0])
+
 
 class AutoNumber(Enum):
 	def __new__(cls):
@@ -274,7 +299,7 @@ class HearthstoneUnnestedEnv(gym.Env):
     """
 
     def __init__(self):
-        self.__version__ = "0.1.0"
+        self.__version__ = "0.2.0"
         print("HearthstoneEnv - Version {}".format(self.__version__))
 
         # General variables defining the environment
@@ -668,10 +693,15 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.deck2=None
                 self.game=None
                 self.lastMovePlayed=None
-                if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None:
+                # se meterá por aquí siempre porque deck1 y deck2 son None, diría que el IF no tiene sentido
+                if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None: 
                     self.deck1=[]
                     self.deck2=[]
-                    collection = []
+                    # He modificado el codigo añadiendo dos collections para evitar tener que repetir el bucle for
+                    # que retrasaba bastante la ejecución
+                    collection1 = []
+                    collection2 = []
+                    # repaso todas las cartas y preservo las que son elegibles para el deck
                     for card in cards.db.keys():
                         if str(card) not in implemented_cards:
                             continue
@@ -681,39 +711,27 @@ class HearthstoneUnnestedEnv(gym.Env):
                         if cls.type == CardType.HERO:
                             # Heroes are collectible...
                             continue
-                        if cls.card_class and cls.card_class not in [self.hero1, CardClass.NEUTRAL]:
+                        if cls.card_class and cls.card_class in [self.hero1, CardClass.NEUTRAL]:
                             # Play with more possibilities
-                            continue
-                        collection.append(cls)
+                            collection1.append(cls)
+                        if cls.card_class and cls.card_class in [self.hero2, CardClass.NEUTRAL]:
+                            # Play with more possibilities
+                            collection2.append(cls)
 
                     while len(self.deck1) < Deck.MAX_CARDS:
-                        card = random.choice(collection)
+                        card = random.choice(collection1)
                         if self.deck1.count(card.id) < card.max_count_in_deck:
                             self.deck1.append(card.id)
-                    
-                    collection = []
-                    for card in cards.db.keys():
-                        if str(card) not in implemented_cards:
-                            continue
-                        cls = cards.db[card]
-                        if not cls.collectible:
-                            continue
-                        if cls.type == CardType.HERO:
-                            # Heroes are collectible...
-                            continue
-                        if cls.card_class and cls.card_class not in [self.hero2, CardClass.NEUTRAL]:
-                            # Play with more possibilities
-                            continue
-                        collection.append(cls)
 
                     while len(self.deck2) < Deck.MAX_CARDS:
-                        card = random.choice(collection)
+                        card = random.choice(collection2)
                         if self.deck2.count(card.id) < card.max_count_in_deck:
                             self.deck2.append(card.id)
-
+                    print(">>> Initialize PLAYER1")
                     self.player1=Player("Player1", self.deck1, self.hero1.default_hero)
+                    print(">>> Initialize PLAYER2")
                     self.player2=Player("Player2", self.deck2, self.hero2.default_hero)
-
+                    print(">>> Initialize GAME")
                     self.game=Game(players=(self.player1, self.player2))
                     self.game.start()
                     self.players_ordered=[self.game.player1, self.game.player2]
@@ -761,12 +779,22 @@ class HearthstoneUnnestedEnv(gym.Env):
 
     def _take_action(self, action):
         possible_actions=self.__getMoves(); #get valid moves
+        print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
+        print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
         counter=0
         for a in self.alreadySelectedActions:
-            possible_actions.remove(a)
+            possible_actions.remove(a) 
+        print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
+        
+        # Hay una situación en el que possible_actions se vacía porque ya se han elegido todas las acciones posibles
+        # por lo que la instrucción possible_actions[counter] Fallará al no contener ningún elemento.
+        # Preguntar a Jesús. Es posible que cuando esto ocurra haya que rellenar el possible_actions con Move.end_turn???
+        # Revisar el código del _getMoves porque hay varias cosas raras.
+
         while len(possible_actions)<869: #fill the entire action space by repeating some valid moves
             possible_actions.append(possible_actions[counter])
             counter=counter+1
+
         if possible_actions[action] == Move.end_turn: #if AI is ending turn - we need to register a random move for the other/random player
             print("doing end turn for AI")
             self.__doMove(possible_actions[action]) #do the AI Turn to swap game to the random player's turn
@@ -955,6 +983,11 @@ class HearthstoneUnnestedEnv(gym.Env):
         player=self.players_ordered[self.playerToMove - 1]
         p1=player
         p2=player.opponent
+        for i in range(10):
+            try:
+                print(">>>>",type(p1.hand[i]),p1.hand[i])
+            except:
+                print(">>>> no ",i)
         s={
             "myhero": p1.hero.card_class-1,
             "opphero": p2.hero.card_class-1,
