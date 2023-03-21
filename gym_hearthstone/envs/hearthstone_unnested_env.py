@@ -126,13 +126,14 @@ class AutoNumber(Enum):
 		return obj
 
 class Move(AutoNumber):
-	end_turn = ()
-	hero_power = ()
-	minion_attack = ()
-	hero_attack = ()
-	play_card = ()
-	mulligan = ()
-	choice = ()
+    end_turn = ()
+    end_mulligan = ()
+    hero_power = ()
+    minion_attack = ()
+    hero_attack = ()
+    play_card = ()
+    mulligan = ()
+    choice = ()
 
 ############################ BATTLEFIELD ######################################################################
 #                                           | OppHero  |
@@ -697,6 +698,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.deck2=None
                 self.game=None
                 self.lastMovePlayed=None
+                self.alreadySelectedActions = []
                 # se meterá por aquí siempre porque deck1 y deck2 son None, diría que el IF no tiene sentido
                 if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None: 
                     self.deck1=[]
@@ -851,6 +853,8 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.__currentMulliganer().choice.choose(*cards)
                 self.playerToMove = self.playerJustMoved
                 self.playerJustMoved = -(self.playerJustMoved - 1) + 2
+            elif move[0] == Move.end_mulligan:
+                self.game.mulligan_done()
             elif move[0] == Move.end_turn:
                 self.game.end_turn()
             elif move[0] == Move.hero_power:
@@ -899,11 +903,15 @@ class HearthstoneUnnestedEnv(gym.Env):
 
         valid_moves = []
 
+        if (self.game.step == Step.MAIN_ACTION):
+            self.alreadySelectedActions = []
+
         # Mulligan
         if self.game.step == Step.BEGIN_MULLIGAN:
             player = self.__currentMulliganer()
             for s in player.choice.cards:
                 valid_moves.append([Move.mulligan, s])
+            valid_moves.append([Move.end_mulligan])
             return valid_moves
 
         current_player = self.game.current_player
@@ -1086,18 +1094,18 @@ class HearthstoneUnnestedEnv(gym.Env):
             "oppfield5def": p2.field[5].health if 5 < len(p2.field) and p2.field[5].type != 7 and p2.field[5].type !=5 else 0,
             "oppfield6def": p2.field[6].health if 6 < len(p2.field) and p2.field[6].type != 7 and p2.field[6].type !=5 else 0,
             "myhand0effects_windfury": 1 if 0 < len(p1.hand) and p1.hand[0].windfury else 0,
-            "myhand0effects_divineshield": 1 if 0 < len(p1.hand) and p1.hand[0].type!=5 and p1.hand[0].divine_shield else 0,
-            "myhand0effects_charge": 1 if 0 < len(p1.hand) and p1.hand[0].type!=5 and p1.hand[0].charge else 0,
+            "myhand0effects_divineshield": 1 if 0 < len(p1.hand) and p1.hand[0].type != 5 and p1.hand[0].type != 7 and p1.hand[0].divine_shield else 0,
+            "myhand0effects_charge": 1 if 0 < len(p1.hand) and p1.hand[0].type != 5 and p1.hand[0].charge else 0,
             "myhand0effects_taunt": 1 if 0 < len(p1.hand) and p1.hand[0].type!=5 and p1.hand[0].taunt else 0,
             "myhand0effects_stealth": 1 if 0 < len(p1.hand) and p1.hand[0].type!=5 and p1.hand[0].stealthed else 0,
             "myhand0effects_poisonous": 1 if 0 < len(p1.hand) and p1.hand[0].type!=5 and p1.hand[0].poisonous else 0,
             "myhand0effects_cantbetargeted": 1 if 0 < len(p1.hand) and p1.hand[0].type!=5 and (p1.hand[0].cant_be_targeted_by_abilities or p1.hand[0].cant_be_targeted_by_hero_powers) else 0,
             "myhand0effects_aura": 1 if 0 < len(p1.hand) and p1.hand[0].aura else 0,
-            "myhand0effects_deathrattle": 1 if 0 < len(p1.hand) and p1.hand[0].type!=5 and p1.hand[0].has_deathrattle else 0,
+            "myhand0effects_deathrattle": 1 if 0 < len(p1.hand) and p1.hand[0].type != 5 and p1.hand[0].has_deathrattle else 0,
             "myhand0effects_frozen": 1 if 0 < len(p1.hand) and p1.hand[0].type!=5 and p1.hand[0].frozen else 0,
             "myhand0effects_silenced": 1 if 0 < len(p1.hand) and p1.hand[0].type!=5 and p1.hand[0].silenced else 0,
             "myhand1effects_windfury": 1 if 1 < len(p1.hand) and p1.hand[1].windfury else 0,
-            "myhand1effects_divineshield": 1 if 1 < len(p1.hand) and p1.hand[1].type!=5 and p1.hand[1].divine_shield else 0,
+            "myhand1effects_divineshield": 1 if 1 < len(p1.hand) and p1.hand[1].type!=5 and p1.hand[0].type!=7 and p1.hand[1].divine_shield else 0,
             "myhand1effects_charge": 1 if 1 < len(p1.hand) and p1.hand[1].type!=5 and p1.hand[1].charge else 0,
             "myhand1effects_taunt": 1 if 1 < len(p1.hand) and p1.hand[1].type!=5 and p1.hand[1].taunt else 0,
             "myhand1effects_stealth": 1 if 1 < len(p1.hand) and p1.hand[1].type!=5 and p1.hand[1].stealthed else 0,
@@ -1108,7 +1116,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myhand1effects_frozen": 1 if 1 < len(p1.hand) and p1.hand[1].type!=5 and p1.hand[1].frozen else 0,
             "myhand1effects_silenced": 1 if 1 < len(p1.hand) and p1.hand[1].type!=5 and p1.hand[1].silenced else 0,
             "myhand2effects_windfury": 1 if 2 < len(p1.hand) and p1.hand[2].windfury else 0,
-            "myhand2effects_divineshield": 1 if 2 < len(p1.hand) and p1.hand[2].type!=5 and p1.hand[2].divine_shield else 0,
+            "myhand2effects_divineshield": 1 if 2 < len(p1.hand) and p1.hand[2].type!=5 and p1.hand[0].type!=7 and p1.hand[2].divine_shield else 0,
             "myhand2effects_charge": 1 if 2 < len(p1.hand) and p1.hand[2].type!=5 and p1.hand[2].charge else 0,
             "myhand2effects_taunt": 1 if 2 < len(p1.hand) and p1.hand[2].type!=5 and p1.hand[2].taunt else 0,
             "myhand2effects_stealth": 1 if 2 < len(p1.hand) and p1.hand[2].type!=5 and p1.hand[2].stealthed else 0,
@@ -1119,7 +1127,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myhand2effects_frozen": 1 if 2 < len(p1.hand) and p1.hand[2].type!=5 and p1.hand[2].frozen else 0,
             "myhand2effects_silenced": 1 if 2 < len(p1.hand) and p1.hand[2].type!=5 and p1.hand[2].silenced else 0,
             "myhand3effects_windfury": 1 if 3 < len(p1.hand) and p1.hand[3].windfury else 0,
-            "myhand3effects_divineshield": 1 if 3 < len(p1.hand) and p1.hand[3].type!=5 and p1.hand[3].divine_shield else 0,
+            "myhand3effects_divineshield": 1 if 3 < len(p1.hand) and p1.hand[3].type != 5 and p1.hand[0].type != 7 and p1.hand[3].divine_shield else 0,
             "myhand3effects_charge": 1 if 3 < len(p1.hand) and p1.hand[3].type!=5 and p1.hand[3].charge else 0,
             "myhand3effects_taunt": 1 if 3 < len(p1.hand) and p1.hand[3].type!=5 and p1.hand[3].taunt else 0,
             "myhand3effects_stealth": 1 if 3 < len(p1.hand) and p1.hand[3].type!=5 and p1.hand[3].stealthed else 0,
@@ -1130,7 +1138,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myhand3effects_frozen": 1 if 3 < len(p1.hand) and p1.hand[3].type!=5 and p1.hand[3].frozen else 0,
             "myhand3effects_silenced": 1 if 3 < len(p1.hand) and p1.hand[3].type!=5 and p1.hand[3].silenced else 0,
             "myhand4effects_windfury": 1 if 4 < len(p1.hand) and p1.hand[4].windfury else 0,
-            "myhand4effects_divineshield": 1 if 4 < len(p1.hand) and p1.hand[4].type!=5 and p1.hand[4].divine_shield else 0,
+            "myhand4effects_divineshield": 1 if 4 < len(p1.hand) and p1.hand[4].type != 5 and p1.hand[0].type != 7 and p1.hand[4].divine_shield else 0,
             "myhand4effects_charge": 1 if 4 < len(p1.hand) and p1.hand[4].type!=5 and p1.hand[4].charge else 0,
             "myhand4effects_taunt": 1 if 4 < len(p1.hand) and p1.hand[4].type!=5 and p1.hand[4].taunt else 0,
             "myhand4effects_stealth": 1 if 4 < len(p1.hand) and p1.hand[4].type!=5 and p1.hand[4].stealthed else 0,
@@ -1141,7 +1149,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myhand4effects_frozen": 1 if 4 < len(p1.hand) and p1.hand[4].type!=5 and p1.hand[4].frozen else 0,
             "myhand4effects_silenced": 1 if 4 < len(p1.hand) and p1.hand[4].type!=5 and p1.hand[4].silenced else 0,
             "myhand5effects_windfury": 1 if 5 < len(p1.hand) and p1.hand[5].windfury else 0,
-            "myhand5effects_divineshield": 1 if 5 < len(p1.hand) and p1.hand[5].type!=5 and p1.hand[5].divine_shield else 0,
+            "myhand5effects_divineshield": 1 if 5 < len(p1.hand) and p1.hand[5].type != 5 and p1.hand[0].type != 7 and p1.hand[5].divine_shield else 0,
             "myhand5effects_charge": 1 if 5 < len(p1.hand) and p1.hand[5].type!=5 and p1.hand[5].charge else 0,
             "myhand5effects_taunt": 1 if 5 < len(p1.hand) and p1.hand[5].type!=5 and p1.hand[5].taunt else 0,
             "myhand5effects_stealth": 1 if 5 < len(p1.hand) and p1.hand[5].type!=5 and p1.hand[5].stealthed else 0,
@@ -1152,7 +1160,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myhand5effects_frozen": 1 if 5 < len(p1.hand) and p1.hand[5].type!=5 and p1.hand[5].frozen else 0,
             "myhand5effects_silenced": 1 if 5 < len(p1.hand) and p1.hand[5].type!=5 and p1.hand[5].silenced else 0,
             "myhand6effects_windfury": 1 if 6 < len(p1.hand) and p1.hand[6].windfury else 0,
-            "myhand6effects_divineshield": 1 if 6 < len(p1.hand) and p1.hand[6].type!=5 and p1.hand[6].divine_shield else 0,
+            "myhand6effects_divineshield": 1 if 6 < len(p1.hand) and p1.hand[6].type != 5 and p1.hand[0].type != 7 and p1.hand[6].divine_shield else 0,
             "myhand6effects_charge": 1 if 6 < len(p1.hand) and p1.hand[6].type!=5 and p1.hand[6].charge else 0,
             "myhand6effects_taunt": 1 if 6 < len(p1.hand) and p1.hand[6].type!=5 and p1.hand[6].taunt else 0,
             "myhand6effects_stealth": 1 if 6 < len(p1.hand) and p1.hand[6].type!=5 and p1.hand[6].stealthed else 0,
@@ -1163,7 +1171,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myhand6effects_frozen": 1 if 6 < len(p1.hand) and p1.hand[6].type!=5 and p1.hand[6].frozen else 0,
             "myhand6effects_silenced": 1 if 6 < len(p1.hand) and p1.hand[6].type!=5 and p1.hand[6].silenced else 0,
             "myhand7effects_windfury": 1 if 7 < len(p1.hand) and p1.hand[7].windfury else 0,
-            "myhand7effects_divineshield": 1 if 7 < len(p1.hand) and p1.hand[7].type!=5 and p1.hand[7].divine_shield else 0,
+            "myhand7effects_divineshield": 1 if 7 < len(p1.hand) and p1.hand[7].type != 5 and p1.hand[0].type != 7 and p1.hand[7].divine_shield else 0,
             "myhand7effects_charge": 1 if 7 < len(p1.hand) and p1.hand[7].type!=5 and p1.hand[7].charge else 0,
             "myhand7effects_taunt": 1 if 7 < len(p1.hand) and p1.hand[7].type!=5 and p1.hand[7].taunt else 0,
             "myhand7effects_stealth": 1 if 7 < len(p1.hand) and p1.hand[7].type!=5 and p1.hand[7].stealthed else 0,
@@ -1174,7 +1182,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myhand7effects_frozen": 1 if 7 < len(p1.hand) and p1.hand[7].type!=5 and p1.hand[7].frozen else 0,
             "myhand7effects_silenced": 1 if 7 < len(p1.hand) and p1.hand[7].type!=5 and p1.hand[7].silenced else 0,
             "myhand8effects_windfury": 1 if 8 < len(p1.hand) and p1.hand[8].windfury else 0,
-            "myhand8effects_divineshield": 1 if 8 < len(p1.hand) and p1.hand[8].type!=5 and p1.hand[8].divine_shield else 0,
+            "myhand8effects_divineshield": 1 if 8 < len(p1.hand) and p1.hand[8].type != 5 and p1.hand[0].type != 7 and p1.hand[8].divine_shield else 0,
             "myhand8effects_charge": 1 if 8 < len(p1.hand) and p1.hand[8].type!=5 and p1.hand[8].charge else 0,
             "myhand8effects_taunt": 1 if 8 < len(p1.hand) and p1.hand[8].type!=5 and p1.hand[8].taunt else 0,
             "myhand8effects_stealth": 1 if 8 < len(p1.hand) and p1.hand[8].type!=5 and p1.hand[8].stealthed else 0,
@@ -1185,7 +1193,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myhand8effects_frozen": 1 if 8 < len(p1.hand) and p1.hand[8].type!=5 and p1.hand[8].frozen else 0,
             "myhand8effects_silenced": 1 if 8 < len(p1.hand) and p1.hand[8].type!=5 and p1.hand[8].silenced else 0,
             "myhand9effects_windfury": 1 if 9 < len(p1.hand) and p1.hand[9].windfury else 0,
-            "myhand9effects_divineshield": 1 if 9 < len(p1.hand) and p1.hand[9].type!=5 and p1.hand[9].divine_shield else 0,
+            "myhand9effects_divineshield": 1 if 9 < len(p1.hand) and p1.hand[9].type != 5 and p1.hand[0].type != 7 and p1.hand[9].divine_shield else 0,
             "myhand9effects_charge": 1 if 9 < len(p1.hand) and p1.hand[9].type!=5 and p1.hand[9].charge else 0,
             "myhand9effects_taunt": 1 if 9 < len(p1.hand) and p1.hand[9].type!=5 and p1.hand[9].taunt else 0,
             "myhand9effects_stealth": 1 if 9 < len(p1.hand) and p1.hand[9].type!=5 and p1.hand[9].stealthed else 0,
@@ -1196,7 +1204,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myhand9effects_frozen": 1 if 9 < len(p1.hand) and p1.hand[9].type!=5 and p1.hand[9].frozen else 0,
             "myhand9effects_silenced": 1 if 9 < len(p1.hand) and p1.hand[9].type!=5 and p1.hand[9].silenced else 0,
             "myfield0effects_windfury": 1 if 0 < len(p1.field) and p1.field[0].windfury else 0,
-            "myfield0effects_divineshield": 1 if 0 < len(p1.field) and p1.field[0].type!=5 and p1.field[0].divine_shield else 0,
+            "myfield0effects_divineshield": 1 if 0 < len(p1.field) and p1.field[0].type != 5 and p1.hand[0].type != 7 and p1.field[0].divine_shield else 0,
             "myfield0effects_charge": 1 if 0 < len(p1.field) and p1.field[0].type!=5 and p1.field[0].charge else 0,
             "myfield0effects_taunt": 1 if 0 < len(p1.field) and p1.field[0].type!=5 and p1.field[0].taunt else 0,
             "myfield0effects_stealth": 1 if 0 < len(p1.field) and p1.field[0].type!=5 and p1.field[0].stealthed else 0,
@@ -1207,7 +1215,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myfield0effects_frozen": 1 if 0 < len(p1.field) and p1.field[0].type!=5 and p1.field[0].frozen else 0,
             "myfield0effects_silenced": 1 if 0 < len(p1.field) and p1.field[0].type!=5 and p1.field[0].silenced else 0,
             "myfield1effects_windfury": 1 if 1 < len(p1.field) and p1.field[1].windfury else 0,
-            "myfield1effects_divineshield": 1 if 1 < len(p1.field) and p1.field[1].type!=5 and p1.field[1].divine_shield else 0,
+            "myfield1effects_divineshield": 1 if 1 < len(p1.field) and p1.field[1].type != 5 and p1.hand[1].type != 7 and p1.field[1].divine_shield else 0,
             "myfield1effects_charge": 1 if 1 < len(p1.field) and p1.field[1].type!=5 and p1.field[1].charge else 0,
             "myfield1effects_taunt": 1 if 1 < len(p1.field) and p1.field[1].type!=5 and p1.field[1].taunt else 0,
             "myfield1effects_stealth": 1 if 1 < len(p1.field) and p1.field[1].type!=5 and p1.field[1].stealthed else 0,
@@ -1218,7 +1226,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myfield1effects_frozen": 1 if 1 < len(p1.field) and p1.field[1].type!=5 and p1.field[1].frozen else 0,
             "myfield1effects_silenced": 1 if 1 < len(p1.field) and p1.field[1].type!=5 and p1.field[1].silenced else 0,
             "myfield2effects_windfury": 1 if 2 < len(p1.field) and p1.field[2].windfury else 0,
-            "myfield2effects_divineshield": 1 if 2 < len(p1.field) and p1.field[2].type!=5 and p1.field[2].divine_shield else 0,
+            "myfield2effects_divineshield": 1 if 2 < len(p1.field) and p1.field[2].type != 5 and p1.hand[2].type != 7 and p1.field[2].divine_shield else 0,
             "myfield2effects_charge": 1 if 2 < len(p1.field) and p1.field[2].type!=5 and p1.field[2].charge else 0,
             "myfield2effects_taunt": 1 if 2 < len(p1.field) and p1.field[2].type!=5 and p1.field[2].taunt else 0,
             "myfield2effects_stealth": 1 if 2 < len(p1.field) and p1.field[2].type!=5 and p1.field[2].stealthed else 0,
@@ -1229,7 +1237,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myfield2effects_frozen": 1 if 2 < len(p1.field) and p1.field[2].type!=5 and p1.field[2].frozen else 0,
             "myfield2effects_silenced": 1 if 2 < len(p1.field) and p1.field[2].type!=5 and p1.field[2].silenced else 0,
             "myfield3effects_windfury": 1 if 3 < len(p1.field) and p1.field[3].windfury else 0,
-            "myfield3effects_divineshield": 1 if 3 < len(p1.field) and p1.field[3].type!=5 and p1.field[3].divine_shield else 0,
+            "myfield3effects_divineshield": 1 if 3 < len(p1.field) and p1.field[3].type != 5 and p1.hand[3].type != 7 and p1.field[3].divine_shield else 0,
             "myfield3effects_charge": 1 if 3 < len(p1.field) and p1.field[3].type!=5 and p1.field[3].charge else 0,
             "myfield3effects_taunt": 1 if 3 < len(p1.field) and p1.field[3].type!=5 and p1.field[3].taunt else 0,
             "myfield3effects_stealth": 1 if 3 < len(p1.field) and p1.field[3].type!=5 and p1.field[3].stealthed else 0,
@@ -1240,7 +1248,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myfield3effects_frozen": 1 if 3 < len(p1.field) and p1.field[3].type!=5 and p1.field[3].frozen else 0,
             "myfield3effects_silenced": 1 if 3 < len(p1.field) and p1.field[3].type!=5 and p1.field[3].silenced else 0,
             "myfield4effects_windfury": 1 if 4 < len(p1.field) and p1.field[4].windfury else 0,
-            "myfield4effects_divineshield": 1 if 4 < len(p1.field) and p1.field[4].type!=5 and p1.field[4].divine_shield else 0,
+            "myfield4effects_divineshield": 1 if 4 < len(p1.field) and p1.field[4].type != 5 and p1.hand[4].type != 7 and p1.field[4].divine_shield else 0,
             "myfield4effects_charge": 1 if 4 < len(p1.field) and p1.field[4].type!=5 and p1.field[4].charge else 0,
             "myfield4effects_taunt": 1 if 4 < len(p1.field) and p1.field[4].type!=5 and p1.field[4].taunt else 0,
             "myfield4effects_stealth": 1 if 4 < len(p1.field) and p1.field[4].type!=5 and p1.field[4].stealthed else 0,
@@ -1251,7 +1259,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myfield4effects_frozen": 1 if 4 < len(p1.field) and p1.field[4].type!=5 and p1.field[4].frozen else 0,
             "myfield4effects_silenced": 1 if 4 < len(p1.field) and p1.field[4].type!=5 and p1.field[4].silenced else 0,
             "myfield5effects_windfury": 1 if 5 < len(p1.field) and p1.field[5].windfury else 0,
-            "myfield5effects_divineshield": 1 if 5 < len(p1.field) and p1.field[5].type!=5 and p1.field[5].divine_shield else 0,
+            "myfield5effects_divineshield": 1 if 5 < len(p1.field) and p1.field[5].type != 5 and p1.hand[5].type != 7 and p1.field[5].divine_shield else 0,
             "myfield5effects_charge": 1 if 5 < len(p1.field) and p1.field[5].type!=5 and p1.field[5].charge else 0,
             "myfield5effects_taunt": 1 if 5 < len(p1.field) and p1.field[5].type!=5 and p1.field[5].taunt else 0,
             "myfield5effects_stealth": 1 if 5 < len(p1.field) and p1.field[5].type!=5 and p1.field[5].stealthed else 0,
@@ -1262,7 +1270,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myfield5effects_frozen": 1 if 5 < len(p1.field) and p1.field[5].type!=5 and p1.field[5].frozen else 0,
             "myfield5effects_silenced": 1 if 5 < len(p1.field) and p1.field[5].type!=5 and p1.field[5].silenced else 0,
             "myfield6effects_windfury": 1 if 6 < len(p1.field) and p1.field[6].windfury else 0,
-            "myfield6effects_divineshield": 1 if 6 < len(p1.field) and p1.field[6].type!=5 and p1.field[6].divine_shield else 0,
+            "myfield6effects_divineshield": 1 if 6 < len(p1.field) and p1.field[6].type != 5 and p1.hand[6].type != 7 and p1.field[6].divine_shield else 0,
             "myfield6effects_charge": 1 if 6 < len(p1.field) and p1.field[6].type!=5 and p1.field[6].charge else 0,
             "myfield6effects_taunt": 1 if 6 < len(p1.field) and p1.field[6].type!=5 and p1.field[6].taunt else 0,
             "myfield6effects_stealth": 1 if 6 < len(p1.field) and p1.field[6].type!=5 and p1.field[6].stealthed else 0,
@@ -1273,7 +1281,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myfield6effects_frozen": 1 if 6 < len(p1.field) and p1.field[6].type!=5 and p1.field[6].frozen else 0,
             "myfield6effects_silenced": 1 if 6 < len(p1.field) and p1.field[6].type!=5 and p1.field[6].silenced else 0,
             "oppfield0effects_windfury": 1 if 0 < len(p2.field) and p2.field[0].windfury else 0,
-            "oppfield0effects_divineshield": 1 if 0 < len(p2.field) and p2.field[0].type!=5 and p2.field[0].divine_shield else 0,
+            "oppfield0effects_divineshield": 1 if 0 < len(p2.field) and p2.field[0].type!=5 and p1.hand[0].type!=7 and p2.field[0].divine_shield else 0,
             "oppfield0effects_charge": 1 if 0 < len(p2.field) and p2.field[0].type!=5 and p2.field[0].charge else 0,
             "oppfield0effects_taunt": 1 if 0 < len(p2.field) and p2.field[0].type!=5 and p2.field[0].taunt else 0,
             "oppfield0effects_stealth": 1 if 0 < len(p2.field) and p2.field[0].type!=5 and p2.field[0].stealthed else 0,
@@ -1284,7 +1292,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "oppfield0effects_frozen": 1 if 0 < len(p2.field) and p2.field[0].type!=5 and p2.field[0].frozen else 0,
             "oppfield0effects_silenced": 1 if 0 < len(p2.field) and p2.field[0].type!=5 and p2.field[0].silenced else 0,
             "oppfield1effects_windfury": 1 if 1 < len(p2.field) and p2.field[1].windfury else 0,
-            "oppfield1effects_divineshield": 1 if 1 < len(p2.field) and p2.field[1].type!=5 and p2.field[1].divine_shield else 0,
+            "oppfield1effects_divineshield": 1 if 1 < len(p2.field) and p2.field[1].type!=5 and p1.hand[1].type!=7 and p2.field[1].divine_shield else 0,
             "oppfield1effects_charge": 1 if 1 < len(p2.field) and p2.field[1].type!=5 and p2.field[1].charge else 0,
             "oppfield1effects_taunt": 1 if 1 < len(p2.field) and p2.field[1].type!=5 and p2.field[1].taunt else 0,
             "oppfield1effects_stealth": 1 if 1 < len(p2.field) and p2.field[1].type!=5 and p2.field[1].stealthed else 0,
@@ -1295,7 +1303,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "oppfield1effects_frozen": 1 if 1 < len(p2.field) and p2.field[1].type!=5 and p2.field[1].frozen else 0,
             "oppfield1effects_silenced": 1 if 1 < len(p2.field) and p2.field[1].type!=5 and p2.field[1].silenced else 0,
             "oppfield2effects_windfury": 1 if 2 < len(p2.field) and p2.field[2].windfury else 0,
-            "oppfield2effects_divineshield": 1 if 2 < len(p2.field) and p2.field[2].type!=5 and p2.field[2].divine_shield else 0,
+            "oppfield2effects_divineshield": 1 if 2 < len(p2.field) and p2.field[2].type!=5 and p1.hand[2].type!=7 and p2.field[2].divine_shield else 0,
             "oppfield2effects_charge": 1 if 2 < len(p2.field) and p2.field[2].type!=5 and p2.field[2].charge else 0,
             "oppfield2effects_taunt": 1 if 2 < len(p2.field) and p2.field[2].type!=5 and p2.field[2].taunt else 0,
             "oppfield2effects_stealth": 1 if 2 < len(p2.field) and p2.field[2].type!=5 and p2.field[2].stealthed else 0,
@@ -1306,7 +1314,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "oppfield2effects_frozen": 1 if 2 < len(p2.field) and p2.field[2].type!=5 and p2.field[2].frozen else 0,
             "oppfield2effects_silenced": 1 if 2 < len(p2.field) and p2.field[2].type!=5 and p2.field[2].silenced else 0,
             "oppfield3effects_windfury": 1 if 3 < len(p2.field) and p2.field[3].windfury else 0,
-            "oppfield3effects_divineshield": 1 if 3 < len(p2.field) and p2.field[3].type!=5 and p2.field[3].divine_shield else 0,
+            "oppfield3effects_divineshield": 1 if 3 < len(p2.field) and p2.field[3].type!=5 and p1.hand[3].type!=7 and p2.field[3].divine_shield else 0,
             "oppfield3effects_charge": 1 if 3 < len(p2.field) and p2.field[3].type!=5 and p2.field[3].charge else 0,
             "oppfield3effects_taunt": 1 if 3 < len(p2.field) and p2.field[3].type!=5 and p2.field[3].taunt else 0,
             "oppfield3effects_stealth": 1 if 3 < len(p2.field) and p2.field[3].type!=5 and p2.field[3].stealthed else 0,
@@ -1317,7 +1325,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "oppfield3effects_frozen": 1 if 3 < len(p2.field) and p2.field[3].type!=5 and p2.field[3].frozen else 0,
             "oppfield3effects_silenced": 1 if 3 < len(p2.field) and p2.field[3].type!=5 and p2.field[3].silenced else 0,
             "oppfield4effects_windfury": 1 if 4 < len(p2.field) and p2.field[4].windfury else 0,
-            "oppfield4effects_divineshield": 1 if 4 < len(p2.field) and p2.field[4].type!=5 and p2.field[4].divine_shield else 0,
+            "oppfield4effects_divineshield": 1 if 4 < len(p2.field) and p2.field[4].type!=5 and p1.hand[4].type!=7 and p2.field[4].divine_shield else 0,
             "oppfield4effects_charge": 1 if 4 < len(p2.field) and p2.field[4].type!=5 and p2.field[4].charge else 0,
             "oppfield4effects_taunt": 1 if 4 < len(p2.field) and p2.field[4].type!=5 and p2.field[4].taunt else 0,
             "oppfield4effects_stealth": 1 if 4 < len(p2.field) and p2.field[4].type!=5 and p2.field[4].stealthed else 0,
@@ -1328,7 +1336,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "oppfield4effects_frozen": 1 if 4 < len(p2.field) and p2.field[4].type!=5 and p2.field[4].frozen else 0,
             "oppfield4effects_silenced": 1 if 4 < len(p2.field) and p2.field[4].type!=5 and p2.field[4].silenced else 0,
             "oppfield5effects_windfury": 1 if 5 < len(p2.field) and p2.field[5].windfury else 0,
-            "oppfield5effects_divineshield": 1 if 5 < len(p2.field) and p2.field[5].type!=5 and p2.field[5].divine_shield else 0,
+            "oppfield5effects_divineshield": 1 if 5 < len(p2.field) and p2.field[5].type!=5 and p1.hand[5].type!=7 and p2.field[5].divine_shield else 0,
             "oppfield5effects_charge": 1 if 5 < len(p2.field) and p2.field[5].type!=5 and p2.field[5].charge else 0,
             "oppfield5effects_taunt": 1 if 5 < len(p2.field) and p2.field[5].type!=5 and p2.field[5].taunt else 0,
             "oppfield5effects_stealth": 1 if 5 < len(p2.field) and p2.field[5].type!=5 and p2.field[5].stealthed else 0,
@@ -1339,7 +1347,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             "oppfield5effects_frozen": 1 if 5 < len(p2.field) and p2.field[5].type!=5 and p2.field[5].frozen else 0,
             "oppfield5effects_silenced": 1 if 5 < len(p2.field) and p2.field[5].type!=5 and p2.field[5].silenced else 0,
             "oppfield6effects_windfury": 1 if 6 < len(p2.field) and p2.field[6].windfury else 0,
-            "oppfield6effects_divineshield": 1 if 6 < len(p2.field) and p2.field[6].type!=5 and p2.field[6].divine_shield else 0,
+            "oppfield6effects_divineshield": 1 if 6 < len(p2.field) and p2.field[6].type!=5 and p1.hand[6].type!=7 and p2.field[6].divine_shield else 0,
             "oppfield6effects_charge": 1 if 6 < len(p2.field) and p2.field[6].type!=5 and p2.field[6].charge else 0,
             "oppfield6effects_taunt": 1 if 6 < len(p2.field) and p2.field[6].type!=5 and p2.field[6].taunt else 0,
             "oppfield6effects_stealth": 1 if 6 < len(p2.field) and p2.field[6].type!=5 and p2.field[6].stealthed else 0,
