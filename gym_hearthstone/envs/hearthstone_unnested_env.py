@@ -4,7 +4,7 @@ from fireplace.player import Player
 from fireplace.game import Game
 from fireplace.deck import Deck
 from fireplace.utils import get_script_definition, random_draft
-from hearthstone.enums import PlayState, Step, Mulligan, State, CardClass, Race, CardSet, CardType
+from hearthstone.enums import PlayState, Step, Mulligan, State, CardClass, Race, CardSet, CardType, Zone
 from gymnasium import spaces
 import gymnasium as gym
 import re
@@ -692,10 +692,12 @@ class HearthstoneUnnestedEnv(gym.Env):
                 # At the root pretend the player just moved is p2 - p1 has the first move
                 self.playerJustMoved=2
                 self.playerToMove=1
-                self.players_ordered=None
-                self.hero1=random.choice(heroes)
+                # To test the app we will set the Heroes p1 - Hunter, p2 - Warrior 
+                #self.hero1=random.choice(heroes)
+                self.hero1 = CardClass.HUNTER
                 self.deck1=None
-                self.hero2=random.choice(heroes)
+                #self.hero2=random.choice(heroes)
+                self.hero2 = CardClass.WARRIOR
                 self.deck2=None
                 self.game=None
                 self.lastMovePlayed=None
@@ -741,11 +743,17 @@ class HearthstoneUnnestedEnv(gym.Env):
                     print(">>> Initialize GAME")
                     self.game=Game(players=(self.player1, self.player2))
                     self.game.start()
-                    self.players_ordered=[self.game.player1, self.game.player2]
-                    # At the root pretend the player just moved is p2 - p1 has the first move
+
+                    # game.player1 is the player that starts and game.player2 recieves the coin
                     self.playerJustMoved=2
                     self.playerToMove=1
                     self.lastMovePlayed=None
+                    # start mulligan and set mulligan of rando bot
+                    print(self.game.step)
+                    self.game.mulligan_done()
+                    print(self.game.step)
+                    self.game.player2.choice.choose(
+                        random.choice(self.game.player2.choice.cards))
                     return
             except Exception as ex:
                 print("exception making decks--trying again"+str(ex))
@@ -779,6 +787,9 @@ class HearthstoneUnnestedEnv(gym.Env):
                  use this for learning.
         """
         self.curr_step += 1
+        print("------------------------")
+        print(">>> Current Step {}".format(self.curr_step))
+        print("------------------------")
         self._take_action(action)
         reward=self._get_reward()
         ob=self._get_state()
@@ -786,6 +797,7 @@ class HearthstoneUnnestedEnv(gym.Env):
 
     def _take_action(self, action):
         possible_actions=self.__getMoves(); #get valid moves
+        print("")
         print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
         print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
         counter=0
@@ -798,31 +810,38 @@ class HearthstoneUnnestedEnv(gym.Env):
         # Preguntar a Jesús. Es posible que cuando esto ocurra haya que rellenar el possible_actions con Move.end_turn???
         # Revisar el código del _getMoves porque hay varias cosas raras.
 
-        while len(possible_actions)<869: #fill the entire action space by repeating some valid moves
-            possible_actions.append(possible_actions[counter])
-            counter=counter+1
-
-        if possible_actions[action] == Move.end_turn: #if AI is ending turn - we need to register a random move for the other/random player
+        agent_action = random.choice(possible_actions)
+            
+        if agent_action[0] == Move.end_turn:
             print("doing end turn for AI")
-            self.__doMove(possible_actions[action]) #do the AI Turn to swap game to the random player's turn
+            print("Current Player is: {}".format(self.game.current_player))
+            self.__doMove(agent_action)
+            print("Current Player is: {}".format(self.game.current_player))
             self.alreadySelectedActions=[]
             possible_actions=self.__getMoves() #get the random player's actions
             action = random.choice(possible_actions) #pick a random one
-            while action != Move.end_turn: #if it's not end turn
+            while action[0] != Move.end_turn: #if it's not end turn
                 print("doing single turn for rando")
+                print("Doing action: {}".format(action))
+                print("Current Player is: {}".format(self.game.current_player))
                 self.alreadySelectedActions.append(action)
                 self.__doMove(action) #do it
+                print("Current Player is: {}".format(self.game.current_player))
                 possible_actions=self.__getMoves() #and get the new set of actions
                 for a in self.alreadySelectedActions:
                     possible_actions.remove(a)
                 action=random.choice(possible_actions) #and pick a random one
+            print("")
             print("doing end turn for rando")
+            print("Doing action: {}".format(action))
+            print("Current Player is: {}".format(self.game.current_player))
             self.__doMove(action) #end random player's turn
+            print("Current Player is: {}".format(self.game.current_player))
             self.alreadySelectedActions=[]
         else: #otherwise we just do the single AI action and keep track so its not used again
-            print("doing single action for AI"+str(possible_actions[action]))
-            self.__doMove(possible_actions[action])
-            self.alreadySelectedActions.append(possible_actions[action])
+            print("doing single action for AI"+str(agent_action))
+            self.__doMove(agent_action)
+            self.alreadySelectedActions.append(agent_action)
 
     def __doMove(self, move, exceptionTester=[]):
         """ Update a state by carrying out the given move.
@@ -836,24 +855,21 @@ class HearthstoneUnnestedEnv(gym.Env):
 
         current_player = self.game.current_player
 
-        if not self.game.step == Step.BEGIN_MULLIGAN:
-            if current_player.playstate != PlayState.PLAYING:
-                print("Attempt to execute move while current_player is in playstate: {}, move not executed".format(current_player.playstate.name))
-                print("Attempted move: {}, on board:".format(move))
-                self.render()
-                return
-
-            if current_player is self.game.player1:
-                self.playerJustMoved = 1
-            else:
-                self.playerJustMoved = 2
-
         try:
             if move[0] == Move.mulligan:
-                cards = [self.__currentMulliganer().choice.cards[i] for i in move[1]]
-                self.__currentMulliganer().choice.choose(*cards)
-                self.playerToMove = self.playerJustMoved
-                self.playerJustMoved = -(self.playerJustMoved - 1) + 2
+                #cards = [self.__currentMulliganer().choice.cards[i] for i in move[1]]
+                print(current_player.playstate)
+                self.game.mulligan_done()
+                print("After mulligan done")
+                print(current_player.playstate)
+                #self.__currentMulliganer().choice.choose(*cards)
+                ## seems that after mulligan_done function is called is when the player must choose the cards to change
+                current_player.choice.choose(current_player.choice.cards[0])
+                print("After 'choice choose' ")
+                print(current_player.playstate)
+
+                # self.playerToMove = self.playerJustMoved
+                # self.playerJustMoved = -(self.playerJustMoved - 1) + 2
             elif move[0] == Move.end_mulligan:
                 self.game.mulligan_done()
             elif move[0] == Move.end_turn:
@@ -882,20 +898,15 @@ class HearthstoneUnnestedEnv(gym.Env):
                 hero.attack(hero.targets[move[2]])
             elif move[0] == Move.choice:
                 current_player.choice.choose(current_player.choice.cards[move[1]])
+                print("Doing Move Choice")
+                print(move[1])
+                print(current_player.choice.cards[move[1]])
         except exceptions.GameOver:
             return True
         except Exception as e:
             # print("Ran into exception: {} While executing move {} for player {}. Game State:".format(str(e), move, self.playerJustMoved))
             # self.render()
             exceptionTester.append(1) # array will eval to True
-        if not self.game.step == Step.BEGIN_MULLIGAN:
-            self.playerToMove = 1 if self.game.current_player is self.game.player1 else 2
-        return False
-    
-    def __currentMulliganer(self):
-        if not self.game.step == Step.BEGIN_MULLIGAN:
-            return None
-        return self.players_ordered[self.playerToMove - 1]
 
     def __getMoves(self):
         """ Get all possible moves from this state.
@@ -907,20 +918,17 @@ class HearthstoneUnnestedEnv(gym.Env):
         if (self.game.step == Step.MAIN_ACTION):
             self.alreadySelectedActions = []
 
-        # Mulligan
-        if self.game.step == Step.BEGIN_MULLIGAN:
-            player = self.__currentMulliganer()
-            for s in player.choice.cards:
-                valid_moves.append([Move.mulligan, s])
-            valid_moves.append([Move.end_mulligan])
-            return valid_moves
 
         current_player = self.game.current_player
         if current_player.playstate != PlayState.PLAYING:
             return []
 
-        # Choose card
+        # Choose card 
+        ## What does this code do ?
+        
         if current_player.choice is not None:
+            print(current_player.choice)
+            print(current_player.choice.cards)
             for i in range(len(current_player.choice.cards)):
                 valid_moves.append([Move.choice, i])
             return valid_moves
@@ -982,25 +990,54 @@ class HearthstoneUnnestedEnv(gym.Env):
             0 if game is not over
         """
         player=self.playerJustMoved
-        if self.players_ordered[0].hero.health <= 0 and self.players_ordered[1].hero.health <= 0:  # tie
+        if self.game.player1.hero.health <= 0 and self.game.player2.hero.health <= 0:  # tie
             return 0.1
-        elif self.players_ordered[player - 1].hero.health <= 0:  # loss
+        elif self.game.player1.hero.health <= 0:  # loss
             return -1
-        elif self.players_ordered[2 - player].hero.health <= 0:  # win
+        elif self.game.player2.hero.health <= 0:  # win
             return 1
         else:
             return 0
 
     def _get_state(self):
         game=self.game
-        player=self.players_ordered[self.playerToMove - 1]
+        print("")
+        player=self.game.player1
         p1=player
         p2=player.opponent
+
+        
+        print("Hand Player 1")
+        print(p1.hand)
+        print(p1.hero)
+        print("")
         for i in range(10):
+
+            if(i < len(p1.hand)):
+                try:
+                    print(implemented_cards.index(p1.hand[i]))
+                except:
+                    p1.hand[i].zone = Zone.GRAVEYARD
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            
             try:
-                print(">>>>",type(p1.hand[i]),p1.hand[i])
+                print(">>>>",type(p1.hand[i]),p1.hand[i], p1.hand[i].id)
             except:
-                print(">>>> no ",i)
+                print(">>>> Hand no ",i)
+        for i in range(10):
+            if(i < len(p1.field)):
+                try:
+                    print(implemented_cards.index(p1.field[i]))
+                except:
+                    p1.field[i].zone = Zone.GRAVEYARD
+                    print(
+                        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            
+            try:
+                print(">>>>", type(p1.field[i]), p1.field[i], p1.field[i].id)
+            except:
+                print(">>>> Field no ", i)
+   
         s={
             "myhero": p1.hero.card_class-1,
             "opphero": p2.hero.card_class-1,
