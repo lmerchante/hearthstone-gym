@@ -305,7 +305,10 @@ class HearthstoneUnnestedEnv(gym.Env):
 
         # General variables defining the environment
         self.curr_step = -1
-        self.action_space = spaces.Discrete(869)
+        # We will start with an action space of types of actions
+        #self.action_space = spaces.Box(0,1, (6,))
+        self.action_space = spaces.Discrete(6)
+        #self.action_space = spaces.Discrete(869)
         self.observation_space = spaces.Dict({
             "myhero": spaces.Discrete(9),
             "opphero": spaces.Discrete(9),
@@ -796,7 +799,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         return ob, reward, reward != 0, {}
 
     def _take_action(self, action):
-        possible_actions=self.__getMoves(); #get valid moves
+        possible_actions, dict_moves = self.__getMoves(); #get valid moves
         print("")
         print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
         print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
@@ -810,7 +813,12 @@ class HearthstoneUnnestedEnv(gym.Env):
         # Preguntar a Jesús. Es posible que cuando esto ocurra haya que rellenar el possible_actions con Move.end_turn???
         # Revisar el código del _getMoves porque hay varias cosas raras.
 
-        agent_action = random.choice(possible_actions)
+        # Okey tenemos que mappear la acción que llega del dqn con las acciones del env
+        # Para ello, voy a ir escalando la solución 
+        # Primero empezamos eligiendo una acción aleatoria
+        # Después implementamos un tipo de acción y si se elige una acción no implementada elegimos una aleatoria
+        agent_action = self._map_type_action(action, dict_moves, possible_actions)
+        #agent_action = self._map_action(action, possible_actions)
             
         if agent_action[0] == Move.end_turn:
             print("doing end turn for AI")
@@ -818,7 +826,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             self.__doMove(agent_action)
             print("Current Player is: {}".format(self.game.current_player))
             self.alreadySelectedActions=[]
-            possible_actions=self.__getMoves() #get the random player's actions
+            possible_actions, dict_moves =self.__getMoves() #get the random player's actions
             action = random.choice(possible_actions) #pick a random one
             while action[0] != Move.end_turn: #if it's not end turn
                 print("doing single turn for rando")
@@ -827,7 +835,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.alreadySelectedActions.append(action)
                 self.__doMove(action) #do it
                 print("Current Player is: {}".format(self.game.current_player))
-                possible_actions=self.__getMoves() #and get the new set of actions
+                possible_actions, dict_moves =self.__getMoves() #and get the new set of actions
                 for a in self.alreadySelectedActions:
                     possible_actions.remove(a)
                 action=random.choice(possible_actions) #and pick a random one
@@ -914,6 +922,14 @@ class HearthstoneUnnestedEnv(gym.Env):
         """
 
         valid_moves = []
+        dict_moves = {
+            "choice" : [],
+            "play_card" : [],
+            "heropower" : [],
+            "minion_attack" : [],
+            "hero_attack" : [],
+            "end_turn" : []
+        }
 
         if (self.game.step == Step.MAIN_ACTION):
             self.alreadySelectedActions = []
@@ -921,7 +937,7 @@ class HearthstoneUnnestedEnv(gym.Env):
 
         current_player = self.game.current_player
         if current_player.playstate != PlayState.PLAYING:
-            return []
+            return [], dict_moves
 
         # Choose card 
         ## What does this code do ?
@@ -931,7 +947,8 @@ class HearthstoneUnnestedEnv(gym.Env):
             print(current_player.choice.cards)
             for i in range(len(current_player.choice.cards)):
                 valid_moves.append([Move.choice, i])
-            return valid_moves
+                dict_moves["choice"].append([Move.choice, i])
+            return valid_moves, dict_moves
 
         else:
             # Play card
@@ -949,15 +966,23 @@ class HearthstoneUnnestedEnv(gym.Env):
                                     for t in range(len(card.targets)):
                                         valid_moves.append(
                                             [Move.play_card, current_player.hand.index(card), t, i])
+                                        dict_moves["play_card"].append(
+                                            [Move.play_card, current_player.hand.index(card), t, i])
                                 else:
                                     valid_moves.append(
+                                        [Move.play_card, current_player.hand.index(card), None, i])
+                                    dict_moves["play_card"].append(
                                         [Move.play_card, current_player.hand.index(card), None, i])
                         elif len(card.targets) > 0:
                             for t in range(len(card.targets)):
                                 valid_moves.append(
                                     [Move.play_card, current_player.hand.index(card), t, None])
+                                dict_moves["play_card"].append(
+                                    [Move.play_card, current_player.hand.index(card), t, None])
                         else:
                             valid_moves.append(
+                                [Move.play_card, current_player.hand.index(card), None, None])
+                            dict_moves["play_card"].append(
                                 [Move.play_card, current_player.hand.index(card), None, None])
 
             # Hero Power
@@ -966,13 +991,18 @@ class HearthstoneUnnestedEnv(gym.Env):
                 if len(heropower.targets) > 0:
                     for t in range(len(heropower.targets)):
                         valid_moves.append([Move.hero_power, None, t])
+                        dict_moves["heropower"].append(
+                            [Move.hero_power, None, t])
                 else:
                     valid_moves.append([Move.hero_power, None, None])
+                    dict_moves["heropower"].append([Move.hero_power, None, None])
             # Minion Attack
             for minion in current_player.field:
                 if minion.can_attack():
                     for t in range(len(minion.targets)):
                         valid_moves.append(
+                            [Move.minion_attack, current_player.field.index(minion), t])
+                        dict_moves["minion_attack"].append(
                             [Move.minion_attack, current_player.field.index(minion), t])
 
             # Hero Attack
@@ -980,9 +1010,324 @@ class HearthstoneUnnestedEnv(gym.Env):
             if hero.can_attack():
                 for t in range(len(hero.targets)):
                     valid_moves.append([Move.hero_attack, None, t])
+                    dict_moves["hero_attack"].append([Move.hero_attack, None, t])
 
             valid_moves.append([Move.end_turn])
-        return valid_moves
+            dict_moves["end_turn"].append([Move.end_turn])
+        print("Moves Dictionary")
+        print(dict_moves)
+        return valid_moves, dict_moves
+    
+    ## This function checks if the action-type that was chosen by the agent is possible
+    # If possible   -> Does a random action of that action type
+    # If not        -> Does a random action of all possible actions
+    def _map_type_action(self, action, dict_moves, possible_actions):
+        print("")
+        print("using map type action fucntion")
+        # action 0 -> choice
+        # action 1 -> play card
+        # cation 2 -> heropower
+        # action 3 -> minion attack
+        # action 4 -> hero attack
+        # action 5 -> end turn
+
+        if (action == 0 and dict_moves["choice"]):
+            print(">>> Trying to do choice action")
+            agent_action = random.choice(dict_moves["choice"])
+        elif (action == 1 and dict_moves["play_card"]):
+            print(">>> Trying to do play card action")
+            agent_action = random.choice(dict_moves["play_card"])
+        elif (action == 2 and dict_moves["heropower"]):
+            print(">>> Trying to do heropower action")
+            agent_action = random.choice(dict_moves["heropower"])
+        elif (action == 3 and dict_moves["minion_attack"]):
+            print(">>> Trying to do attack with minion action")
+            agent_action = random.choice(dict_moves["minion_attack"])
+        elif (action == 4 and dict_moves["hero_attack"]):
+            print(">>> Trying to do attack with hero action")
+            agent_action = random.choice(dict_moves["hero_attack"])
+        elif (action == 5 and dict_moves["end_turn"]):
+            print(">>> Trying to do end turn action")
+            agent_action = random.choice(dict_moves["end_turn"])
+        try:
+            print(agent_action)
+            print(">>> The action is possible, doing action ^^^")
+            return agent_action
+        except:
+            print("!!! This type of action is not possible")
+            agent_action = random.choice(possible_actions)
+            return agent_action
+
+    ## This function is in development stage
+    # This action breaks down the mapping of all action into mapping actions for each type
+    def _map_action(self, action, possible_actions):
+        # range of action from 0 to 868
+        print("")
+        print("using map Action function")
+        agent_action = random.choice(possible_actions)
+        action = int(action)
+        print(action)
+        print(type(action))
+
+        if action == 0:
+            print(">>> Action end turn was choosen by the Agent")
+
+            if possible_actions[-1][0] == Move.end_turn:
+                print("End turn action is possible ")
+                agent_action = possible_actions[-1]
+        elif action < 18:
+            heropower_actions = []
+            for a in possible_actions:
+                if(a[0] == Move.hero_power):
+                    heropower_actions.append(a)
+            if(heropower_actions):
+                # If it is not empty then map heropower_actions
+                print("--->>> Some heroPower actions are possible")
+                if(action == 1):
+                    # if the heropower does not require targets the list length must be 1
+                        # so we just have to check if the target value is None
+                    if(heropower_actions[0][2] == None):
+                        print("--->>> Choosing no targets forheropower")
+                        agent_action = heropower_actions[0]
+
+            else:
+                print("No heroPower options are possible :(")
+
+        elif action < 88:
+            print(" The agent choose 'Attack group of actions'")
+            agent_action = self._map_attack_minion(action, possible_actions, agent_action)
+        
+        elif action < 200:
+            print("The agent choose 'Play group of actions'")
+            agent_action = self._map_play_action(action, possible_actions, agent_action)
+            
+        else:
+            print(">>> Action is not implemented yet :(")
+
+        return agent_action
+
+        # Action                                                        Relative Action Number          Cumulative Action Number
+        ###############################################################################################################
+        ### My implementation
+        # End Turn														0-1											0-0
+        # Hero Power No Targets                                         0-1                                         1-1
+        # Hero Power OppHero                                            0-1                                         2-2
+        # Hero Power OppField0-6                                        0-7                                         3-9
+        # Hero Power MyField0-6                                         0-7                                         10-16
+        # Hero Power MyHero                                             0-1                                         17-17
+        # Attack with MyField0 on OppHero								1-1											18-18
+        # Attack with MyField0 on OppField0-6							1-7											19-25
+        # Attack with MyField1 ''										1-8											26-34
+        # Attack with MyField2-6 ''										1-8, 1-8, 1-8, 1-8, 1-8						35-43, 44-52, 53-61, 62-70, 71-79
+        # Attack with MyHero ''											1-8											80-88
+        # Play MyHand0 on MyField0 and None targets                     1-1                                         89-89
+        # Play MyHand0 on MyField0 and Use Action on OppHero            1-1                                         90-90
+        # Play MyHand0 on MyField0 and Use Action on OppField0-6        1-7                                         91-97
+        # Play MyHand0 on MyField0 and Use Action on MyField0-6         1-7                                         98-105
+        # Play MyHand0 on MyField0 and Use Action on MyHero             1-1                                         106-106
+        # Play MyHand0 on MyField1 and Use Action ''                    1-17                                        107-124
+        # Play MyHand0 on MyField2-6 ''                                 1-16,1-16,1-16,1-16,1-16                    125-142,143-160,161-178,179-196,197-214
+        # Play MyHand1-6 on ''                                          1-112, 1-112, 1-112, 1-112, 1-112, 1-112    129-240, 241-352, 353-464, 465-576, 577-688, 689-800
+
+
+
+        ### Previous implementation
+        # Hero Power OppHero                                            1-1                                         1-1
+        # Hero Power OppField0-6                                        1-7                                         2-8
+        # Hero Power MyField0-6                                         1-7                                         9-15
+        # Hero Power MyHero                                             1-1                                         16-16
+        # Play MyHand0 on MyField0 and Use Action on OppHero            1-1                                         17-17
+        # Play MyHand0 on MyField0 and Use Action on OppField0-6        1-7                                         18-24
+        # Play MyHand0 on MyField0 and Use Action on MyField0-6         1-7                                         25-31
+        # Play MyHand0 on MyField0 and Use Action on MyHero             1-1                                         32-32
+        # Play MyHand0 on MyField1 and Use Action ''                    1-16                                        33-48
+        # Play MyHand0 on MyField2-6 ''                                 1-16,1-16,1-16,1-16,1-16                    49-64,65-80,81-96,97-112,113-128
+        # Play MyHand1-6 on ''                                          1-112, 1-112, 1-112, 1-112, 1-112, 1-112    129-240, 241-352, 353-464, 465-576, 577-688, 689-800
+        # Attack with MyField0 on OppHero								1-1											801-801
+        # Attack with MyField0 on OppField0-6							1-7											802-808
+        # Attack with MyField1 ''										1-8											809-816
+        # Attack with MyField2-6 ''										1-8, 1-8, 1-8, 1-8, 1-8						817-824, 825-832, 833-840, 841-848, 849-856
+        # Attack with MyHero ''											1-8											857-864
+        # Mulligan MyHand0-3											1-4											865-868
+        # End Turn														1-1											869-869
+    
+    ## This action is in development stage
+    # This action maps all possible attack minion actions
+    def _map_attack_minion(self, action, possible_actions, agent_action):
+        ## Minion 0 Attacks
+        if action < 26:
+            if(len(self.game.current_player.field ) > 0):
+                minion0_attack_actions = []
+                for a in possible_actions:
+                    if(a[0] == Move.minion_attack and a[1] == 0):
+                        minion0_attack_actions.append(a)
+                if (minion0_attack_actions):
+                    # If it is not empty then map heropower_actions
+                    print("--->>> Some Minion Attack actions are possible")
+                    print(minion0_attack_actions)
+                    if (action == 18):
+                        print("--->>> Choosing to attack Opp hero")
+                        # If the opp hero can be target then it should be the first
+                        # Not sure how can we handle this for other less common situations
+                        agent_action = minion0_attack_actions[0]
+                        print(agent_action)
+                    elif(action == 19 and len(minion0_attack_actions) > 1):
+                        print("Attacking oppField0")
+                        if(minion0_attack_actions[0][2] == 0):
+                            agent_action = minion0_attack_actions[1]
+                        else:
+                            agent_action = minion0_attack_actions[0]
+        # Minion 1 Attacks
+        elif action < 35:
+            if (len(self.game.current_player.field) > 1):
+                minion1_attack_actions = []
+                for a in possible_actions:
+                    if (a[0] == Move.minion_attack and a[1] == 1):
+                        minion1_attack_actions.append(a)
+                if (minion1_attack_actions):
+                    # If it is not empty then map heropower_actions
+                    print("--->>> Some Minion Attack actions are possible")
+                    if (action == 26):
+                        print("--->>> Choosing to attack Opp hero")
+                        # If the opp hero can be target then it should be the first
+                        # Not sure how can we handle this for other less common situations
+                        agent_action = minion1_attack_actions[0]
+
+        # Minion 2 Attacks
+        elif action < 44:
+            if (len(self.game.current_player.field) > 2):
+                minion2_attack_actions = []
+                for a in possible_actions:
+                    if (a[0] == Move.minion_attack and a[1] == 2):
+                        minion2_attack_actions.append(a)
+                if (minion2_attack_actions):
+                    # If it is not empty then map heropower_actions
+                    print("--->>> Some Minion Attack actions are possible")
+                    if (action == 35):
+                        print("--->>> Choosing to attack Opp hero")
+                        # If the opp hero can be target then it should be the first
+                        # Not sure how can we handle this for other less common situations
+                        agent_action = minion2_attack_actions[0]
+
+        # Minion 3 Attacks
+        elif action < 53:
+            if (len(self.game.current_player.field) > 3):
+                minion3_attack_actions = []
+                for a in possible_actions:
+                    if (a[0] == Move.minion_attack and a[1] == 3):
+                        minion3_attack_actions.append(a)
+                if (minion3_attack_actions):
+                    # If it is not empty then map heropower_actions
+                    print("--->>> Some Minion Attack actions are possible")
+                    if (action == 44):
+                        print("--->>> Choosing to attack Opp hero")
+                        # If the opp hero can be target then it should be the first
+                        # Not sure how can we handle this for other less common situations
+                        agent_action = minion3_attack_actions[0]
+
+                # Minion 4 Attacks
+        elif action < 62:
+            if (len(self.game.current_player.field) > 4):
+                minion4_attack_actions = []
+                for a in possible_actions:
+                    if (a[0] == Move.minion_attack and a[1] == 4):
+                        minion4_attack_actions.append(a)
+                if (minion4_attack_actions):
+                    # If it is not empty then map heropower_actions
+                    print("--->>> Some Minion Attack actions are possible")
+                    if (action == 53):
+                        print("--->>> Choosing to attack Opp hero")
+                        # If the opp hero can be target then it should be the first
+                        # Not sure how can we handle this for other less common situations
+                        agent_action = minion4_attack_actions[0]
+
+        # Minion 5 Attacks
+        elif action < 71:
+            if (len(self.game.current_player.field) > 5):
+                minion5_attack_actions = []
+                for a in possible_actions:
+                    if (a[0] == Move.minion_attack and a[1] == 5):
+                        minion5_attack_actions.append(a)
+                if (minion5_attack_actions):
+                    # If it is not empty then map heropower_actions
+                    print("--->>> Some Minion Attack actions are possible")
+                    if (action == 62):
+                        print("--->>> Choosing to attack Opp hero")
+                        # If the opp hero can be target then it should be the first
+                        # Not sure how can we handle this for other less common situations
+                        agent_action = minion5_attack_actions[0]
+
+        # Minion 5 Attacks
+        elif action < 89:
+            if (len(self.game.current_player.hero.can_attack())):
+                hero_attack_actions = []
+                for a in possible_actions:
+                    if (a[0] == Move.hero_attack and a[1] == 0):
+                        hero_attack_actions.append(a)
+                if (hero_attack_actions):
+                    # If it is not empty then map heropower_actions
+                    print("--->>> Some Minion Attack actions are possible")
+                    if (action == 71):
+                        print("--->>> Choosing to attack Opp hero")
+                        # If the opp hero can be target then it should be the first
+                        # Not sure how can we handle this for other less common situations
+                        agent_action = hero_attack_actions[0]
+
+        return agent_action
+    
+    # This action is in development stage
+    # This action maps all possible play card actions
+    def _map_play_action(self, action, possible_actions, agent_action):
+        print("Mapping play card actions")
+        # To start I will implement 10 actions where the card can be plaid with no targets
+        play_none_actions = []
+        for a in possible_actions:
+            if(a[0] == Move.play_card and a[2] == None and a[3] == None):
+                play_none_actions.append(a)
+        # play card 0
+        if(action == 100):
+            if (len(self.game.current_player.hand > 0) and play_none_actions[0][1] == 1):
+                agent_action = play_none_actions[0]
+        #play card 1
+        elif(action == 101 and len(self.game.current_player.hand > 1)):
+            for a in play_none_actions:
+                if(a[1] == 1):
+                    agent_action = a
+
+        # play card 2
+        elif (action == 102 and len(self.game.current_player.hand > 2)):
+            for a in play_none_actions:
+                if (a[1] == 2):
+                    agent_action = a
+
+
+        #play card 3
+        elif (action == 103 and len(self.game.current_player.hand > 3)):
+            for a in play_none_actions:
+                if(a[1] == 3):
+                    agent_action = a
+
+        # play card 4
+        elif (action == 104 and len(self.game.current_player.hand > 4)):
+            for a in play_none_actions:
+                if (a[1] == 4):
+                    agent_action = a
+
+        # play card 5
+        elif (action == 105 and len(self.game.current_player.hand > 5)):
+            for a in play_none_actions:
+                if (a[1] == 5):
+                    agent_action = a
+
+        # play card 6
+        elif (action == 106 and len(self.game.current_player.hand > 6)):
+            for a in play_none_actions:
+                if (a[1] == 6):
+                    agent_action = a
+
+        return agent_action
+            
+
 
     def _get_reward(self):
         """ Get the current reward, from the perspective of the player who just moved
