@@ -796,6 +796,11 @@ class HearthstoneUnnestedEnv(gym.Env):
         self._take_action(action)
         reward=self._get_reward()
         ob=self._get_state()
+
+        ## This if-statement will automaticaly reset the env for the dqn algorithm
+        #if reward != 0:
+        #    ob = self.reset()
+        #    print("reset the env for DQN algorithm")
         return ob, reward, reward != 0, {}
 
     def _take_action(self, action):
@@ -836,6 +841,10 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.__doMove(action) #do it
                 print("Current Player is: {}".format(self.game.current_player))
                 possible_actions, dict_moves =self.__getMoves() #and get the new set of actions
+
+                ## When rando wins or losses the while breaks
+                if(self.game.player1.hero.health <=0 or self.game.player2.hero.health <= 0):
+                    break
                 for a in self.alreadySelectedActions:
                     possible_actions.remove(a)
                 action=random.choice(possible_actions) #and pick a random one
@@ -843,7 +852,9 @@ class HearthstoneUnnestedEnv(gym.Env):
             print("doing end turn for rando")
             print("Doing action: {}".format(action))
             print("Current Player is: {}".format(self.game.current_player))
-            self.__doMove(action) #end random player's turn
+            # Game is not over
+            if(self.game.player1.hero.health > 0 or self.game.player2.hero.health > 0):
+                self.__doMove(action) #end random player's turn
             print("Current Player is: {}".format(self.game.current_player))
             self.alreadySelectedActions=[]
         else: #otherwise we just do the single AI action and keep track so its not used again
@@ -1356,32 +1367,35 @@ class HearthstoneUnnestedEnv(gym.Env):
         print(p1.hand)
         print(p1.hero)
         print("")
+
+        ## When a card is deleted from the the hand or field lists, the indexes change
+        # I needed to save the indexes or iterate the list from end to begining
         for i in range(10):
 
-            if(i < len(p1.hand)):
+            if( 9-i < len(p1.hand)):
                 try:
-                    print(implemented_cards.index(p1.hand[i]))
+                    print(implemented_cards.index(p1.hand[9-i]))
                 except:
-                    p1.hand[i].zone = Zone.GRAVEYARD
+                    p1.hand[9-i].zone = Zone.GRAVEYARD
                     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             
             try:
-                print(">>>>",type(p1.hand[i]),p1.hand[i], p1.hand[i].id)
+                print(">>>>",type(p1.hand[9-i]),p1.hand[9-i], p1.hand[9-i].id)
             except:
-                print(">>>> Hand no ",i)
+                print(">>>> Hand no ",9-i)
         for i in range(10):
-            if(i < len(p1.field)):
+            if( 9-i < len(p1.field)):
                 try:
-                    print(implemented_cards.index(p1.field[i]))
+                    print(implemented_cards.index(p1.field[9-i]))
                 except:
-                    p1.field[i].zone = Zone.GRAVEYARD
+                    p1.field[9-i].zone = Zone.GRAVEYARD
                     print(
                         "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             
             try:
-                print(">>>>", type(p1.field[i]), p1.field[i], p1.field[i].id)
+                print(">>>>", type(p1.field[9-i]), p1.field[9-i], p1.field[9-i].id)
             except:
-                print(">>>> Field no ", i)
+                print(">>>> Field no ", 9-i)
    
         s={
             "myhero": p1.hero.card_class-1,
