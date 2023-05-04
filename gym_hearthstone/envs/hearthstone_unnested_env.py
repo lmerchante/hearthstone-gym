@@ -796,11 +796,6 @@ class HearthstoneUnnestedEnv(gym.Env):
         self._take_action(action)
         reward=self._get_reward()
         ob=self._get_state()
-
-        ## This if-statement will automaticaly reset the env for the dqn algorithm
-        #if reward != 0:
-        #    ob = self.reset()
-        #    print("reset the env for DQN algorithm")
         return ob, reward, reward != 0, {}
 
     def _take_action(self, action):
@@ -1394,6 +1389,34 @@ class HearthstoneUnnestedEnv(gym.Env):
             
             try:
                 print(">>>>", type(p1.field[9-i]), p1.field[9-i], p1.field[9-i].id)
+            except:
+                print(">>>> Field no ", 9-i)
+
+        ## Repeat the process for the opponent
+        for i in range(10):
+
+            if( 9-i < len(p2.hand)):
+                try:
+                    print(implemented_cards.index(p2.hand[9-i]))
+                except:
+                    p2.hand[9-i].zone = Zone.GRAVEYARD
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            
+            try:
+                print(">>>>",type(p2.hand[9-i]),p2.hand[9-i], p2.hand[9-i].id)
+            except:
+                print(">>>> Hand no ",9-i)
+        for i in range(10):
+            if( 9-i < len(p2.field)):
+                try:
+                    print(implemented_cards.index(p2.field[9-i]))
+                except:
+                    p2.field[9-i].zone = Zone.GRAVEYARD
+                    print(
+                        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            
+            try:
+                print(">>>>", type(p2.field[9-i]), p2.field[9-i], p2.field[9-i].id)
             except:
                 print(">>>> Field no ", 9-i)
    
