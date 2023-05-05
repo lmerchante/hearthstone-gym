@@ -699,7 +699,12 @@ class HearthstoneUnnestedEnv(gym.Env):
             "myfield6canattack": spaces.Discrete(2),
             "myherocanattack": spaces.Discrete(2)
         })
-        self.curr_episode=-1
+        # Define stats
+        self.curr_episode=0
+        self.wins = 0
+        self.ties = 0
+        self.losses = 0
+        self.total_reward = 0
         self.action_episode_memory=[]
         self.alreadySelectedActions=[]
         self.setup_game()
@@ -707,6 +712,25 @@ class HearthstoneUnnestedEnv(gym.Env):
     def reset(self):
         self.setup_game()
         return self._get_state()
+
+    def reset_stats(self):
+        self.curr_episode = 0
+        self.curr_step = 0
+        self.wins = 0
+        self.ties = 0
+        self.losses = 0
+        self.total_reward = 0
+
+    def display_stats(self):
+        print("-----------STATS------------")
+        print("Number of Games: " + str(self.curr_episode))
+        print("Number of Wins: " + str(self.wins))
+        print("Number of Losses: " + str(self.losses))
+        print("Number of Ties: " + str(self.ties))
+        if(self.wins + self.losses > 0):
+            print("Number of Win Rate: " + str(self.wins / (self.wins + self.losses)))
+        print("Total reward is: " + str(self.total_reward))
+        print("----------------------------")
     
     def setup_game(self):
         heroes=list(CardClass)
@@ -714,11 +738,10 @@ class HearthstoneUnnestedEnv(gym.Env):
         heroes.remove(CardClass.DREAM)
         heroes.remove(CardClass.NEUTRAL)
         heroes.remove(CardClass.WHIZBANG)
+        self.curr_step = 0
         while True:
             try:
-                # At the root pretend the player just moved is p2 - p1 has the first move
-                self.playerJustMoved=2
-                self.playerToMove=1
+
                 # To test the app we will set the Heroes p1 - Hunter, p2 - Warrior 
                 #self.hero1=random.choice(heroes)
                 self.hero1 = CardClass.HUNTER
@@ -727,16 +750,11 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.hero2 = CardClass.WARRIOR
                 self.deck2=None
                 self.game=None
-                self.lastMovePlayed=None
                 self.alreadySelectedActions = []
                 # se meterá por aquí siempre porque deck1 y deck2 son None, diría que el IF no tiene sentido
                 if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None: 
                     self.deck1=[]
                     self.deck2=[]
-                    # He modificado el codigo añadiendo dos collections para evitar tener que repetir el bucle for
-                    # que retrasaba bastante la ejecución
-                    collection1 = []
-                    collection2 = []
 
                     while len(self.deck1) < Deck.MAX_CARDS:
                         if random.random() > 0.5:
@@ -769,10 +787,6 @@ class HearthstoneUnnestedEnv(gym.Env):
                     self.game=Game(players=(self.player1, self.player2))
                     self.game.start()
 
-                    # game.player1 is the player that starts and game.player2 recieves the coin
-                    self.playerJustMoved=2
-                    self.playerToMove=1
-                    self.lastMovePlayed=None
                     # start mulligan and set mulligan of rando bot
                     print(self.game.step)
                     self.game.mulligan_done()
@@ -816,22 +830,35 @@ class HearthstoneUnnestedEnv(gym.Env):
         print(">>> Current Step {}".format(self.curr_step))
         print("------------------------")
         self._take_action(action)
-        print("Health of Heroes after Step")
-        print("Hero1 live points: " + str(self.game.player1.hero.health))
-        print("Hero2 live points: " + str(self.game.player2.hero.health))
+
+        ## change episode count each time the game finishes
+        if (self.game.player1.hero.health < 1 and self.game.player2.hero.health < 1):
+            self.curr_episode += 1
+            self.ties += 1
+        elif self.game.player1.hero.health < 1:
+            self.curr_episode += 1
+            self.losses += 1
+        elif self.game.player2.hero.health < 1:
+            self.curr_episode += 1
+            self.wins += 1
+
         reward=self._get_reward()
+        self.total_reward += reward
         ob=self._get_state()
         return ob, reward, reward != 0, {}
 
     def _take_action(self, action):
         possible_actions, dict_moves = self.__getMoves(); #get valid moves
-        # printprint("")
-        # print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
-        # print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
+        print("")
+        print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
+        print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
         counter=0
         for a in self.alreadySelectedActions:
-            possible_actions.remove(a) 
-        #print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
+            try:
+                possible_actions.remove(a)
+            except:
+                print("The action in the selected actions is not in possible actions!!!")        
+        print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
         
         # Hay una situación en el que possible_actions se vacía porque ya se han elegido todas las acciones posibles
         # por lo que la instrucción possible_actions[counter] Fallará al no contener ningún elemento.
@@ -847,38 +874,38 @@ class HearthstoneUnnestedEnv(gym.Env):
             
         if agent_action[0] == Move.end_turn:
             # print("doing end turn for AI")
-            # print("Current Player is: {}".format(self.game.current_player))
             self.__doMove(agent_action)
-            #print("Current Player is: {}".format(self.game.current_player))
             self.alreadySelectedActions=[]
             possible_actions, dict_moves =self.__getMoves() #get the random player's actions
+            print(possible_actions)
             action = random.choice(possible_actions) #pick a random one
             while action[0] != Move.end_turn: #if it's not end turn
-                #print("doing single turn for rando")
-                #print("Doing action: {}".format(action))
-                #print("Current Player is: {}".format(self.game.current_player))
+                print("doing single turn for rando")
+                print("Doing action: {}".format(action))
                 self.alreadySelectedActions.append(action)
                 self.__doMove(action) #do it
-                #print("Current Player is: {}".format(self.game.current_player))
                 possible_actions, dict_moves =self.__getMoves() #and get the new set of actions
 
                 ## When rando wins or losses the while breaks
                 if(self.game.player1.hero.health <=0 or self.game.player2.hero.health <= 0):
                     break
+                print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
+                print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
                 for a in self.alreadySelectedActions:
-                    possible_actions.remove(a)
+                    try:
+                        possible_actions.remove(a)
+                    except:
+                        print("The action in the selected actions is not in possible actions!!!")
                 action=random.choice(possible_actions) #and pick a random one
-            # print("")
-            # print("doing end turn for rando")
-            # print("Doing action: {}".format(action))
-            # print("Current Player is: {}".format(self.game.current_player))
+            print("")
+            print("doing end turn for rando")
+            print("Doing action: {}".format(action))
             # Game is not over
             if(self.game.player1.hero.health > 0 or self.game.player2.hero.health > 0):
                 self.__doMove(action) #end random player's turn
-            #print("Current Player is: {}".format(self.game.current_player))
             self.alreadySelectedActions=[]
         else: #otherwise we just do the single AI action and keep track so its not used again
-            #print("doing single action for AI"+str(agent_action))
+            print("doing single action for AI"+str(agent_action))
             self.__doMove(agent_action)
             self.alreadySelectedActions.append(agent_action)
 
@@ -888,8 +915,6 @@ class HearthstoneUnnestedEnv(gym.Env):
             Returns True if game is over
             Modified version of function from Ragowit's Fireplace fork
         """
-        # print("move %s" % move[0])
-
         self.lastMovePlayed = move
 
         current_player = self.game.current_player
@@ -1349,7 +1374,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             1 for win, -1 for loss
             0 if game is not over
         """
-        player=self.playerJustMoved
+        #player=self.playerJustMoved
         if self.game.player1.hero.health <= 0 and self.game.player2.hero.health <= 0:  # tie
             return 0.1
         elif self.game.player1.hero.health <= 0:  # loss
