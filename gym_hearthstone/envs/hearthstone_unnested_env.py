@@ -159,6 +159,10 @@ class Move(AutoNumber):
     play_card = ()
     choice = ()
 
+file_rewards = open('reward_step.csv', 'w')
+file_rewards.write("Game" + ',' + "Step" + ',' + "Reward" + '\n')
+file_rewards.close()
+
 ############################ BATTLEFIELD ######################################################################
 #                                           | OppHero  |
 # OppHand0  | OppHand1  | OppHand2  | OppHand3  | OppHand4  | OppHand5  | OppHand6  | OppHand7  | OppHand8 | OppHand9 |
@@ -844,6 +848,13 @@ class HearthstoneUnnestedEnv(gym.Env):
 
         reward=self._get_reward()
         self.total_reward += reward
+
+        ## Create csv to store the reward per step
+        ## Here we write the game number, the step of the game and the reward
+        file_rewards = open('reward_step.csv', 'a')
+        file_rewards.write(str(self.curr_episode) + ',' + str(self.curr_step) + ',' + str(reward) + '\n')
+        file_rewards.close()
+
         ob=self._get_state()
         return ob, reward, reward != 0, {}
 
