@@ -117,6 +117,11 @@ for id in sorted(cards.db):
     if carddef:
         implemented = True
 
+    ## Kazakus sometimes ends up in an infinite loop, so we will treat it as not implemented
+    # Card id -> CFM_621
+    if card.id == "CFM_621":
+        implemented = False
+
     color = GREEN if implemented else RED
     name = color + "%s: %s" % (PREFIXES[color], card.name) + ENDC
 
@@ -884,30 +889,35 @@ class HearthstoneUnnestedEnv(gym.Env):
         #agent_action = self._map_action(action, possible_actions)
             
         if agent_action[0] == Move.end_turn:
-            # print("doing end turn for AI")
+            print("doing end turn for AI")
             self.__doMove(agent_action)
             self.alreadySelectedActions=[]
-            possible_actions, dict_moves =self.__getMoves() #get the random player's actions
-            print(possible_actions)
-            action = random.choice(possible_actions) #pick a random one
-            while action[0] != Move.end_turn: #if it's not end turn
-                print("doing single turn for rando")
-                print("Doing action: {}".format(action))
-                self.alreadySelectedActions.append(action)
-                self.__doMove(action) #do it
-                possible_actions, dict_moves =self.__getMoves() #and get the new set of actions
 
-                ## When rando wins or losses the while breaks
-                if(self.game.player1.hero.health <=0 or self.game.player2.hero.health <= 0):
-                    break
-                print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
-                print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
-                for a in self.alreadySelectedActions:
-                    try:
-                        possible_actions.remove(a)
-                    except:
-                        print("The action in the selected actions is not in possible actions!!!")
-                action=random.choice(possible_actions) #and pick a random one
+            ## There was an error when the hero died at the begining of its turn (Fatigue)
+            # We need to take this case into consideration
+            # This implementation also takes into account any card that kills the oponent at the end of the turn
+            if self.game.player2.hero.health > 0:
+                possible_actions, dict_moves =self.__getMoves() #get the random player's actions
+                print(possible_actions)
+                action = random.choice(possible_actions) #pick a random one
+                while action[0] != Move.end_turn: #if it's not end turn
+                    print("doing single turn for rando")
+                    print("Doing action: {}".format(action))
+                    self.alreadySelectedActions.append(action)
+                    self.__doMove(action) #do it
+                    possible_actions, dict_moves =self.__getMoves() #and get the new set of actions
+
+                    ## When rando wins or losses the while breaks
+                    if(self.game.player1.hero.health <=0 or self.game.player2.hero.health <= 0):
+                        break
+                    print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
+                    print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
+                    for a in self.alreadySelectedActions:
+                        try:
+                            possible_actions.remove(a)
+                        except:
+                            print("The action in the selected actions is not in possible actions!!!")
+                    action=random.choice(possible_actions) #and pick a random one
             print("")
             print("doing end turn for rando")
             print("Doing action: {}".format(action))
