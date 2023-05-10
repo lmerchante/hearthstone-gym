@@ -41,20 +41,37 @@ class HearthstoneUnnestedEnv(gym.Env):
     when the agent receives which reward.
     """
 
-    def __init__(self):
+    def __init__(
+            self,
+            action_type = "random",
+            reward_mode = "simple"
+                 ):
         self.__version__ = "0.2.0"
         print("HearthstoneEnv - Version {}".format(self.__version__))
 
-        # General variables defining the environment
-        self.curr_step = -1
-        # We will start with an action space of types of actions
-        #self.action_space = spaces.Box(0,1, (6,))
-        self.action_space = spaces.Discrete(6)
+        ## Arguments
+        if action_type != "type":
+            self.action_type = "random"
+        else:
+            self.action_type = action_type
+
+        if (reward_mode != "penalize" and reward_mode != "incentive" and reward_mode != "complex"):
+            self.reward_mode = "simple"
+        else:
+            self.reward_mode = reward_mode
+        
+        self.legal_action = 0
+            
+        if action_type == "random":
+            self.action_space = spaces.Discrete(1)
+        elif action_type == "type":
+            self.action_space = spaces.Discrete(6)
         #self.action_space = spaces.Discrete(869)
 
         self.observation_space = env_setup.get_obs_space()
         
         # Define stats
+        self.curr_step = -1
         self.curr_episode=0
         self.wins = 0
         self.ties = 0
@@ -88,6 +105,11 @@ class HearthstoneUnnestedEnv(gym.Env):
         print("----------------------------")
     
     def setup_game(self):
+        """
+        Set up a new Fireplace game.
+        The function sets the heroes, creates the deck and starts the game in fireplace.
+        At the end, it also implements essential logic for the first step of the game (Mulligan).
+        """
         heroes=list(CardClass)
         heroes.remove(CardClass.INVALID)
         heroes.remove(CardClass.DREAM)
@@ -106,49 +128,44 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.deck2=None
                 self.game=None
                 self.alreadySelectedActions = []
-                # se meterá por aquí siempre porque deck1 y deck2 son None, diría que el IF no tiene sentido
-                if self.hero1 is None or self.hero2 is None or self.deck1 is None or self.deck2 is None: 
-                    self.deck1=[]
-                    self.deck2=[]
 
-                    while len(self.deck1) < Deck.MAX_CARDS:
-                        if random.random() > 0.5:
-                            # Add card class
-                            card = random.choice(setup_dict[self.hero1])
-                        else:
-                            # Add neutral card
-                            card = random.choice(setup_dict[CardClass.NEUTRAL])
-                        #card = random.choice(collection1)
-                        if self.deck1.count(card.id) < card.max_count_in_deck:
-                            self.deck1.append(card.id)
+                self.deck1=[]
+                self.deck2=[]
 
-                    while len(self.deck2) < Deck.MAX_CARDS:
-                        if random.random() > 0.5:
-                            # Add card class
-                            card = random.choice(setup_dict[self.hero2])
-                        else:
-                            # Add neutral card
-                            card = random.choice(setup_dict[CardClass.NEUTRAL])
-                        #card = random.choice(collection2)
-                        if self.deck2.count(card.id) < card.max_count_in_deck:
-                            self.deck2.append(card.id)
+                while len(self.deck1) < Deck.MAX_CARDS:
+                    if random.random() > 0.5:
+                        # Add card class
+                        card = random.choice(setup_dict[self.hero1])
+                    else:
+                        # Add neutral card
+                        card = random.choice(setup_dict[CardClass.NEUTRAL])
+                    if self.deck1.count(card.id) < card.max_count_in_deck:
+                        self.deck1.append(card.id)
+
+                while len(self.deck2) < Deck.MAX_CARDS:
+                    if random.random() > 0.5:
+                        # Add card class
+                        card = random.choice(setup_dict[self.hero2])
+                    else:
+                        # Add neutral card
+                        card = random.choice(setup_dict[CardClass.NEUTRAL])
+
+                    if self.deck2.count(card.id) < card.max_count_in_deck:
+                        self.deck2.append(card.id)
 
 
-                    print(">>> Initialize PLAYER1")
-                    self.player1=Player("Player1", self.deck1, self.hero1.default_hero)
-                    print(">>> Initialize PLAYER2")
-                    self.player2=Player("Player2", self.deck2, self.hero2.default_hero)
-                    print(">>> Initialize GAME")
-                    self.game=Game(players=(self.player1, self.player2))
-                    self.game.start()
+                self.player1=Player("Player1", self.deck1, self.hero1.default_hero)
+                self.player2=Player("Player2", self.deck2, self.hero2.default_hero)
+                self.game=Game(players=(self.player1, self.player2))
+                self.game.start()
 
-                    # start mulligan and set mulligan of rando bot
-                    print(self.game.step)
-                    self.game.mulligan_done()
-                    print(self.game.step)
-                    self.game.player2.choice.choose(
-                        random.choice(self.game.player2.choice.cards))
-                    return
+                # start mulligan and set mulligan of rando bot
+                print(self.game.step)
+                self.game.mulligan_done()
+                print(self.game.step)
+                self.game.player2.choice.choose(
+                    random.choice(self.game.player2.choice.cards))
+                return
             except Exception as ex:
                 print("exception making decks--trying again"+str(ex))
 
@@ -210,11 +227,16 @@ class HearthstoneUnnestedEnv(gym.Env):
         return ob, reward, reward != 0, {}
 
     def _take_action(self, action):
+        """
+        Define the logic to execute in fireplace the action chosen by the agent.
+            * First it defines the possible actions at the current moment
+            * Second maps the agent action with the fireplace action
+            * Third Executes the desired action in fireplace 
+        """
         possible_actions, dict_moves = self.__getMoves(); #get valid moves
         print("")
         print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
         print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
-        counter=0
         for a in self.alreadySelectedActions:
             try:
                 possible_actions.remove(a)
@@ -222,12 +244,14 @@ class HearthstoneUnnestedEnv(gym.Env):
                 print("The action in the selected actions is not in possible actions!!!")        
         print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
 
-        # Okey tenemos que mappear la acción que llega del dqn con las acciones del env
-        # Para ello, voy a ir escalando la solución 
-        # Primero empezamos eligiendo una acción aleatoria
-        # Después implementamos un tipo de acción y si se elige una acción no implementada elegimos una aleatoria
-        agent_action = self._map_type_action(action, dict_moves, possible_actions)
-        #agent_action = self._map_action(action, possible_actions)
+
+
+        if self.action_type == "random":
+            agent_action = random.choice(possible_actions)
+
+        elif self.action_type == "type":
+            agent_action, self.legal_action = self._map_type_action(action, dict_moves, possible_actions)
+        
             
         if agent_action[0] == Move.end_turn:
             print("doing end turn for AI")
@@ -271,11 +295,12 @@ class HearthstoneUnnestedEnv(gym.Env):
             self.__doMove(agent_action)
             self.alreadySelectedActions.append(agent_action)
 
+
     def __doMove(self, move, exceptionTester=[]):
-        """ Update a state by carrying out the given move.
-            Move format is [enum, index of selected card, target index, choice]
-            Returns True if game is over
-            Modified version of function from Ragowit's Fireplace fork
+        """
+        Defines the logic to execute a possible action in fireplace.
+        This function checks which type of action was selected and 
+        uses fireplace to execute the actions
         """
         self.lastMovePlayed = move
 
@@ -308,9 +333,6 @@ class HearthstoneUnnestedEnv(gym.Env):
                 hero.attack(hero.targets[move[2]])
             elif move[0] == Move.choice:
                 current_player.choice.choose(current_player.choice.cards[move[1]])
-                # print("Doing Move Choice")
-                # print(move[1])
-                # print(current_player.choice.cards[move[1]])
         except exceptions.GameOver:
             return True
         except Exception as e:
@@ -319,8 +341,11 @@ class HearthstoneUnnestedEnv(gym.Env):
             exceptionTester.append(1) # array will eval to True
 
     def __getMoves(self):
-        """ Get all possible moves from this state.
-            Modified version of function from Ragowit's Fireplace fork
+        """ 
+        Get all possible moves from this state.
+        It creates a list (valid_moves) & a dictionary (dict_moves)
+            Valid Moves contains all possible actions at a given moment
+            Dict Moves helps to separate this moves into different types of actions
         """
 
         valid_moves = []
@@ -341,12 +366,8 @@ class HearthstoneUnnestedEnv(gym.Env):
         if current_player.playstate != PlayState.PLAYING:
             return [], dict_moves
 
-        # Choose card 
-        ## What does this code do ?
         
         if current_player.choice is not None:
-            # print(current_player.choice)
-            # print(current_player.choice.cards)
             for i in range(len(current_player.choice.cards)):
                 valid_moves.append([Move.choice, i])
                 dict_moves["choice"].append([Move.choice, i])
@@ -420,45 +441,40 @@ class HearthstoneUnnestedEnv(gym.Env):
         print(dict_moves)
         return valid_moves, dict_moves
     
-    ## This function checks if the action-type that was chosen by the agent is possible
-    # If possible   -> Does a random action of that action type
-    # If not        -> Does a random action of all possible actions
+
     def _map_type_action(self, action, dict_moves, possible_actions):
-        #print("")
-        #print("using map type action fucntion")
-        # action 0 -> choice
-        # action 1 -> play card
-        # cation 2 -> heropower
-        # action 3 -> minion attack
-        # action 4 -> hero attack
-        # action 5 -> end turn
+        """
+        Maps action with a type when the action space is set to action types.
+
+        This function checks if the action-type that was chosen by the agent is possible
+        If possible   -> Does a random action of that action type
+        If not        -> Does a random action of all possible actions
+
+        action 0 -> choice
+        action 1 -> play card
+        cation 2 -> heropower
+        action 3 -> minion attack
+        action 4 -> hero attack
+        action 5 -> end turn
+        """
 
         if (action == 0 and dict_moves["choice"]):
-            #print(">>> Trying to do choice action")
             agent_action = random.choice(dict_moves["choice"])
         elif (action == 1 and dict_moves["play_card"]):
-            #print(">>> Trying to do play card action")
             agent_action = random.choice(dict_moves["play_card"])
         elif (action == 2 and dict_moves["heropower"]):
-            #print(">>> Trying to do heropower action")
             agent_action = random.choice(dict_moves["heropower"])
         elif (action == 3 and dict_moves["minion_attack"]):
-            #print(">>> Trying to do attack with minion action")
             agent_action = random.choice(dict_moves["minion_attack"])
         elif (action == 4 and dict_moves["hero_attack"]):
-            #print(">>> Trying to do attack with hero action")
             agent_action = random.choice(dict_moves["hero_attack"])
         elif (action == 5 and dict_moves["end_turn"]):
-            #print(">>> Trying to do end turn action")
             agent_action = random.choice(dict_moves["end_turn"])
         try:
-            #print(agent_action)
-            #print(">>> The action is possible, doing action ^^^")
-            return agent_action
+            return agent_action, 1
         except:
-            #print("!!! This type of action is not possible")
             agent_action = random.choice(possible_actions)
-            return agent_action
+            return agent_action, -1
        
     
 
@@ -475,11 +491,23 @@ class HearthstoneUnnestedEnv(gym.Env):
         elif self.game.player2.hero.health <= 0:  # win
             return 1
         else:
-            return 0
+            if self.reward_mode == "complex" :
+                return 0.01 * self.legal_action
+            elif (self.reward_mode == "penalize" and self.legal_action == -1):
+                return -0.01
+            elif (self.reward_mode == "incentive" and self.legal_action == 1):
+                return 0.01
+            else:
+                return 0
 
     def _get_state(self):
-        game=self.game
-        #print("")
+        """ 
+        This function handles unimplemented cards and retrieves a new observation
+            First it checks that all cards in both hands and fields are implemented
+            Second if a card is not implemented it 'deletes' the card from the game
+            Third uses env_setup to get a new observation
+        """
+       
         player=self.game.player1
         p1=player
         p2=player.opponent
@@ -493,25 +521,16 @@ class HearthstoneUnnestedEnv(gym.Env):
                 try:
                     print(implemented_cards.index(p1.hand[9-i]))
                 except:
-                    p1.hand[9-i].zone = Zone.GRAVEYARD
-                    #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            
-            # try:
-            #     print(">>>>",type(p1.hand[9-i]),p1.hand[9-i], p1.hand[9-i].id)
-            # except:
-            #     print(">>>> Hand no ",9-i)
+                    p1.hand[9-i].zone = Zone.GRAVEYARD            
+
         for i in range(10):
             if( 9-i < len(p1.field)):
                 try:
                     print(implemented_cards.index(p1.field[9-i]))
                 except:
                     p1.field[9-i].zone = Zone.GRAVEYARD
-                    #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             
-            # try:
-            #     print(">>>>", type(p1.field[9-i]), p1.field[9-i], p1.field[9-i].id)
-            # except:
-            #     print(">>>> Field no ", 9-i)
+
 
         ## Repeat the process for the opponent
         for i in range(10):
@@ -521,7 +540,6 @@ class HearthstoneUnnestedEnv(gym.Env):
                     print(implemented_cards.index(p2.hand[9-i]))
                 except:
                     p2.hand[9-i].zone = Zone.GRAVEYARD
-                    #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
         for i in range(10):
             if( 9-i < len(p2.field)):
@@ -529,7 +547,6 @@ class HearthstoneUnnestedEnv(gym.Env):
                     print(implemented_cards.index(p2.field[9-i]))
                 except:
                     p2.field[9-i].zone = Zone.GRAVEYARD
-                    #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             
         return env_setup.get_observations(p1,p2)
         
