@@ -29,9 +29,6 @@ class Move(AutoNumber):
     play_card = ()
     choice = ()
 
-file_rewards = open('reward_step.csv', 'w')
-file_rewards.write("Game" + ',' + "Step" + ',' + "Reward" + '\n')
-file_rewards.close()
 
 
 class HearthstoneUnnestedEnv(gym.Env):
@@ -44,7 +41,8 @@ class HearthstoneUnnestedEnv(gym.Env):
     def __init__(
             self,
             action_type = "random",
-            reward_mode = "simple"
+            reward_mode = "simple",
+            file_name="reward_step"
                  ):
         self.__version__ = "0.2.0"
         print("HearthstoneEnv - Version {}".format(self.__version__))
@@ -67,6 +65,11 @@ class HearthstoneUnnestedEnv(gym.Env):
         elif action_type == "type":
             self.action_space = spaces.Discrete(6)
         #self.action_space = spaces.Discrete(869)
+
+        file_rewards = open(file_name + '_reward.csv', 'w')
+        file_rewards.write("Game" + ',' + "Step" + ',' + "Reward" + '\n')
+        file_rewards.close()
+        self.file_name = file_name
 
         self.observation_space = env_setup.get_obs_space()
         
@@ -219,7 +222,7 @@ class HearthstoneUnnestedEnv(gym.Env):
 
         ## Create csv to store the reward per step
         ## Here we write the game number, the step of the game and the reward
-        file_rewards = open('reward_step.csv', 'a')
+        file_rewards = open(self.file_name + '_reward.csv', 'a')
         file_rewards.write(str(self.curr_episode) + ',' + str(self.curr_step) + ',' + str(reward) + '\n')
         file_rewards.close()
 
