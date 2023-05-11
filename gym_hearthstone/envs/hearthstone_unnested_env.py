@@ -42,13 +42,13 @@ class HearthstoneUnnestedEnv(gym.Env):
             self,
             action_type = "random",
             reward_mode = "simple",
-            file_name="reward_step"
+            steps = 1000
                  ):
         self.__version__ = "0.2.0"
         print("HearthstoneEnv - Version {}".format(self.__version__))
 
         ## Arguments
-        if action_type != "type":
+        if (action_type != "type" and action_type != "type_rd"):
             self.action_type = "random"
         else:
             self.action_type = action_type
@@ -62,14 +62,14 @@ class HearthstoneUnnestedEnv(gym.Env):
             
         if action_type == "random":
             self.action_space = spaces.Discrete(1)
-        elif action_type == "type":
+        elif (action_type == "type" or action_type == "type_rd"):
             self.action_space = spaces.Discrete(6)
         #self.action_space = spaces.Discrete(869)
 
-        file_rewards = open(file_name + '_reward.csv', 'w')
+        self.file_name = action_type + "_" + reward_mode + "_" + str(steps)
+        file_rewards = open('./reward_data/' + self.file_name + '_reward.csv', 'w')
         file_rewards.write("Game" + ',' + "Step" + ',' + "Reward" + '\n')
         file_rewards.close()
-        self.file_name = file_name
 
         self.observation_space = env_setup.get_obs_space()
         
@@ -206,28 +206,34 @@ class HearthstoneUnnestedEnv(gym.Env):
         print("------------------------")
         self._take_action(action)
 
+        terminated = False
         ## change episode count each time the game finishes
         if (self.game.player1.hero.health < 1 and self.game.player2.hero.health < 1):
             self.curr_episode += 1
             self.ties += 1
+            terminated = True
         elif self.game.player1.hero.health < 1:
             self.curr_episode += 1
             self.losses += 1
+            terminated = True
+
         elif self.game.player2.hero.health < 1:
             self.curr_episode += 1
             self.wins += 1
+            terminated = True
+
 
         reward=self._get_reward()
         self.total_reward += reward
 
         ## Create csv to store the reward per step
         ## Here we write the game number, the step of the game and the reward
-        file_rewards = open(self.file_name + '_reward.csv', 'a')
+        file_rewards = open('./reward_data/' + self.file_name + '_reward.csv', 'a')
         file_rewards.write(str(self.curr_episode) + ',' + str(self.curr_step) + ',' + str(reward) + '\n')
         file_rewards.close()
 
         ob=self._get_state()
-        return ob, reward, reward != 0, {}
+        return ob, reward, terminated, {}
 
     def _take_action(self, action):
         """
@@ -252,51 +258,51 @@ class HearthstoneUnnestedEnv(gym.Env):
         if self.action_type == "random":
             agent_action = random.choice(possible_actions)
 
-        elif self.action_type == "type":
+        elif (self.action_type == "type" or self.action_type == "type_rd"):
             agent_action, self.legal_action = self._map_type_action(action, dict_moves, possible_actions)
         
-            
-        if agent_action[0] == Move.end_turn:
-            print("doing end turn for AI")
-            self.__doMove(agent_action)
-            self.alreadySelectedActions=[]
+        if agent_action:  
+            if agent_action[0] == Move.end_turn:
+                print("doing end turn for AI")
+                self.__doMove(agent_action)
+                self.alreadySelectedActions=[]
 
-            ## There was an error when the hero died at the begining of its turn (Fatigue)
-            # We need to take this case into consideration
-            # This implementation also takes into account any card that kills the oponent at the end of the turn
-            if self.game.player2.hero.health > 0:
-                possible_actions, dict_moves =self.__getMoves() #get the random player's actions
-                print(possible_actions)
-                action = random.choice(possible_actions) #pick a random one
-                while action[0] != Move.end_turn: #if it's not end turn
-                    print("doing single turn for rando")
-                    print("Doing action: {}".format(action))
-                    self.alreadySelectedActions.append(action)
-                    self.__doMove(action) #do it
-                    possible_actions, dict_moves =self.__getMoves() #and get the new set of actions
+                ## There was an error when the hero died at the begining of its turn (Fatigue)
+                # We need to take this case into consideration
+                # This implementation also takes into account any card that kills the oponent at the end of the turn
+                if self.game.player2.hero.health > 0:
+                    possible_actions, dict_moves =self.__getMoves() #get the random player's actions
+                    print(possible_actions)
+                    action = random.choice(possible_actions) #pick a random one
+                    while action[0] != Move.end_turn: #if it's not end turn
+                        print("doing single turn for rando")
+                        print("Doing action: {}".format(action))
+                        self.alreadySelectedActions.append(action)
+                        self.__doMove(action) #do it
+                        possible_actions, dict_moves =self.__getMoves() #and get the new set of actions
 
-                    ## When rando wins or losses the while breaks
-                    if(self.game.player1.hero.health <=0 or self.game.player2.hero.health <= 0):
-                        break
-                    print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
-                    print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
-                    for a in self.alreadySelectedActions:
-                        try:
-                            possible_actions.remove(a)
-                        except:
-                            print("The action in the selected actions is not in possible actions!!!")
-                    action=random.choice(possible_actions) #and pick a random one
-            print("")
-            print("doing end turn for rando")
-            print("Doing action: {}".format(action))
-            # Game is not over
-            if(self.game.player1.hero.health > 0 or self.game.player2.hero.health > 0):
-                self.__doMove(action) #end random player's turn
-            self.alreadySelectedActions=[]
-        else: #otherwise we just do the single AI action and keep track so its not used again
-            print("doing single action for AI"+str(agent_action))
-            self.__doMove(agent_action)
-            self.alreadySelectedActions.append(agent_action)
+                        ## When rando wins or losses the while breaks
+                        if(self.game.player1.hero.health <=0 or self.game.player2.hero.health <= 0):
+                            break
+                        print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
+                        print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
+                        for a in self.alreadySelectedActions:
+                            try:
+                                possible_actions.remove(a)
+                            except:
+                                print("The action in the selected actions is not in possible actions!!!")
+                        action=random.choice(possible_actions) #and pick a random one
+                print("")
+                print("doing end turn for rando")
+                print("Doing action: {}".format(action))
+                # Game is not over
+                if(self.game.player1.hero.health > 0 or self.game.player2.hero.health > 0):
+                    self.__doMove(action) #end random player's turn
+                self.alreadySelectedActions=[]
+            else: #otherwise we just do the single AI action and keep track so its not used again
+                print("doing single action for AI"+str(agent_action))
+                self.__doMove(agent_action)
+                self.alreadySelectedActions.append(agent_action)
 
 
     def __doMove(self, move, exceptionTester=[]):
@@ -460,6 +466,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         action 4 -> hero attack
         action 5 -> end turn
         """
+        agent_action = None
 
         if (action == 0 and dict_moves["choice"]):
             agent_action = random.choice(dict_moves["choice"])
@@ -473,13 +480,16 @@ class HearthstoneUnnestedEnv(gym.Env):
             agent_action = random.choice(dict_moves["hero_attack"])
         elif (action == 5 and dict_moves["end_turn"]):
             agent_action = random.choice(dict_moves["end_turn"])
-        try:
-            return agent_action, 1
-        except:
-            agent_action = random.choice(possible_actions)
-            return agent_action, -1
        
-    
+        if(agent_action):
+            return agent_action, 1
+        else:
+            if(self.action_type == "type_rd"):
+                agent_action = random.choice(possible_actions)
+                return agent_action, -1
+            else:
+                return agent_action, -1
+
 
     def _get_reward(self):
         """ Get the current reward, from the perspective of the player who just moved
