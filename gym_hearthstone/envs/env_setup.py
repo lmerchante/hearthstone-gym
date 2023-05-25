@@ -132,8 +132,10 @@ for id in sorted(cards.db):
         implemented = True
 
     # Kazakus sometimes ends up in an infinite loop, so we will treat it as not implemented
-    # Card id -> CFM_621
+    # Card id -> CFM_621 & BT_203
     if card.id == "CFM_621":
+        implemented = False
+    if card.id == "BT_203":
         implemented = False
 
     color = GREEN if implemented else RED
