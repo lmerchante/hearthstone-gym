@@ -1,2 +1,0 @@
-Games, AvgStepsGame, TotalTime, AvgTimeGame, TotalReward, WinRate 
-11,90.91,58.10,5.28,-17.02,0.00

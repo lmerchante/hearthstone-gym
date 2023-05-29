@@ -137,6 +137,8 @@ for id in sorted(cards.db):
         implemented = False
     if card.id == "BT_203":
         implemented = False
+    if card.id == "NEW1_038":
+        implemented = False
 
     color = GREEN if implemented else RED
     name = color + "%s: %s" % (PREFIXES[color], card.name) + ENDC

@@ -42,7 +42,6 @@ class HearthstoneUnnestedEnv(gym.Env):
             self,
             action_type = "random",
             reward_mode = "simple",
-            steps = 1000
                  ):
         self.__version__ = "0.2.0"
         print("HearthstoneEnv - Version {}".format(self.__version__))
@@ -66,10 +65,11 @@ class HearthstoneUnnestedEnv(gym.Env):
             self.action_space = spaces.Discrete(6)
         #self.action_space = spaces.Discrete(869)
 
-        self.file_name = action_type + "_" + reward_mode + "_" + str(steps)
-        file_rewards = open('./reward_data/' + self.file_name + '_reward.csv', 'w')
-        file_rewards.write("Game" + ',' + "Step" + ',' + "Reward" + '\n')
-        file_rewards.close()
+        # self.file_name = action_type + "_" + reward_mode + "_" + str(steps)
+        # file_rewards = open('./reward_data/' + self.file_name + '_reward.csv', 'w')
+        # file_rewards.write("Game" + ',' + "Step" + ',' + "Reward" + '\n')
+        # file_rewards.close()
+        self.reward_dict = {}
 
         self.observation_space = env_setup.get_obs_space()
         
@@ -80,6 +80,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         self.ties = 0
         self.losses = 0
         self.total_reward = 0
+        self.errors = 0
         self.action_episode_memory=[]
         self.alreadySelectedActions=[]
         self.setup_game()
@@ -95,6 +96,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         self.ties = 0
         self.losses = 0
         self.total_reward = 0
+        self.errors = 0
 
     def display_stats(self):
         print("-----------STATS------------")
@@ -102,6 +104,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         print("Number of Wins: " + str(self.wins))
         print("Number of Losses: " + str(self.losses))
         print("Number of Ties: " + str(self.ties))
+        print("Number of Errors: " + str(self.errors))
         if(self.wins + self.losses > 0):
             print("Number of Win Rate: " + str(self.wins / (self.wins + self.losses)))
         print("Total reward is: " + str(self.total_reward))
@@ -119,15 +122,14 @@ class HearthstoneUnnestedEnv(gym.Env):
         heroes.remove(CardClass.NEUTRAL)
         heroes.remove(CardClass.WHIZBANG)
         self.curr_step = 0
+        self.reward_dict[self.curr_episode] = 0
         while True:
             try:
 
                 # To test the app we will set the Heroes p1 - Hunter, p2 - Warrior 
-                #self.hero1=random.choice(heroes)
-                self.hero1 = CardClass.HUNTER
+                self.hero1=random.choice(heroes)
                 self.deck1=None
-                #self.hero2=random.choice(heroes)
-                self.hero2 = CardClass.WARRIOR
+                self.hero2=random.choice(heroes)
                 self.deck2=None
                 self.game=None
                 self.alreadySelectedActions = []
@@ -204,36 +206,40 @@ class HearthstoneUnnestedEnv(gym.Env):
         print("------------------------")
         print(">>> Current Step {}".format(self.curr_step))
         print("------------------------")
-        self._take_action(action)
+        try:
+            self._take_action(action)
 
-        terminated = False
-        ## change episode count each time the game finishes
-        if (self.game.player1.hero.health < 1 and self.game.player2.hero.health < 1):
-            self.curr_episode += 1
-            self.ties += 1
+            terminated = False
+            ## change episode count each time the game finishes
+            if (self.game.player1.hero.health < 1 and self.game.player2.hero.health < 1):
+                self.curr_episode += 1
+                self.ties += 1
+                terminated = True
+            elif self.game.player1.hero.health < 1:
+                self.curr_episode += 1
+                self.losses += 1
+                terminated = True
+
+            elif self.game.player2.hero.health < 1:
+                self.curr_episode += 1
+                self.wins += 1
+                terminated = True
+            reward=self._get_reward()
+            self.total_reward += reward
+            self.reward_dict[self.curr_episode] += reward
+
+            ## Create csv to store the reward per step
+            ## Here we write the game number, the step of the game and the reward
+            # file_rewards = open('./reward_data/' + self.file_name + '_reward.csv', 'a')
+            # file_rewards.write(str(self.curr_episode) + ',' + str(self.curr_step) + ',' + str(reward) + '\n')
+            # file_rewards.close()
+            ob=self._get_state()
+            return ob, reward, terminated, {}
+        except:
+            self.errors += 1
             terminated = True
-        elif self.game.player1.hero.health < 1:
-            self.curr_episode += 1
-            self.losses += 1
-            terminated = True
-
-        elif self.game.player2.hero.health < 1:
-            self.curr_episode += 1
-            self.wins += 1
-            terminated = True
-
-
-        reward=self._get_reward()
-        self.total_reward += reward
-
-        ## Create csv to store the reward per step
-        ## Here we write the game number, the step of the game and the reward
-        file_rewards = open('./reward_data/' + self.file_name + '_reward.csv', 'a')
-        file_rewards.write(str(self.curr_episode) + ',' + str(self.curr_step) + ',' + str(reward) + '\n')
-        file_rewards.close()
-
-        ob=self._get_state()
-        return ob, reward, terminated, {}
+            ob = self.reset()
+            return ob, reward, terminated, {}
 
     def _take_action(self, action):
         """
