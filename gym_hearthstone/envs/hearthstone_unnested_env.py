@@ -63,14 +63,10 @@ class HearthstoneUnnestedEnv(gym.Env):
             self.action_space = spaces.Discrete(1)
         elif (action_type == "type" or action_type == "type_rd"):
             self.action_space = spaces.Discrete(6)
-        #self.action_space = spaces.Discrete(869)
-
-        # self.file_name = action_type + "_" + reward_mode + "_" + str(steps)
-        # file_rewards = open('./reward_data/' + self.file_name + '_reward.csv', 'w')
-        # file_rewards.write("Game" + ',' + "Step" + ',' + "Reward" + '\n')
-        # file_rewards.close()
+        
+        # store training data
         self.reward_dict = {}
-
+        self.games_outcome = []
         self.observation_space = env_setup.get_obs_space()
         
         # Define stats
@@ -121,6 +117,8 @@ class HearthstoneUnnestedEnv(gym.Env):
         heroes.remove(CardClass.DREAM)
         heroes.remove(CardClass.NEUTRAL)
         heroes.remove(CardClass.WHIZBANG)
+        heroes.remove(CardClass.DEATHKNIGHT)
+        heroes.remove(CardClass.DEMONHUNTER)
         self.curr_step = 0
         self.reward_dict[self.curr_episode] = 0
         while True:
@@ -214,29 +212,28 @@ class HearthstoneUnnestedEnv(gym.Env):
             if (self.game.player1.hero.health < 1 and self.game.player2.hero.health < 1):
                 self.curr_episode += 1
                 self.ties += 1
+                self.games_outcome.append(0)
                 terminated = True
             elif self.game.player1.hero.health < 1:
                 self.curr_episode += 1
                 self.losses += 1
+                self.games_outcome.append(-1)
+
                 terminated = True
 
             elif self.game.player2.hero.health < 1:
                 self.curr_episode += 1
                 self.wins += 1
+                self.games_outcome.append(1)
                 terminated = True
             reward=self._get_reward()
             self.total_reward += reward
             self.reward_dict[self.curr_episode] += reward
 
-            ## Create csv to store the reward per step
-            ## Here we write the game number, the step of the game and the reward
-            # file_rewards = open('./reward_data/' + self.file_name + '_reward.csv', 'a')
-            # file_rewards.write(str(self.curr_episode) + ',' + str(self.curr_step) + ',' + str(reward) + '\n')
-            # file_rewards.close()
             ob=self._get_state()
             return ob, reward, terminated, {}
         except:
-            self.errors += 1
+            self.errors += 1 
             terminated = True
             ob = self.reset()
             return ob, reward, terminated, {}
@@ -526,6 +523,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             Second if a card is not implemented it 'deletes' the card from the game
             Third uses env_setup to get a new observation
         """
+        
        
         player=self.game.player1
         p1=player
