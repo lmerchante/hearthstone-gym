@@ -235,6 +235,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         except:
             self.errors += 1 
             terminated = True
+            reward = 0
             ob = self.reset()
             return ob, reward, terminated, {}
 
