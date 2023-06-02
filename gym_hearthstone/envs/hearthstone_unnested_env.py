@@ -529,6 +529,53 @@ class HearthstoneUnnestedEnv(gym.Env):
         p1=player
         p2=player.opponent
 
+        #### Making sure that the observation space contains the values
+        # hero's health
+        if(p1.hero.health > 30):
+            p1.hero.health = 30
+        if(p2.hero.health > 30):
+            p2.hero.health = 30
+
+        # hero's armor
+        if(p1.hero.armor > 500):
+            p1.hero.armor = 500
+        if(p2.hero.armor > 500):
+            p2.hero.armor = 500
+
+        # hero's weapon
+        if(p1.weapon and p1.weapon.atk > 500):
+            p1.weapon.atk = 500
+        if(p2.weapon and p2.weapon.atk > 500):
+            p2.weapon.atk = 500
+
+        if(p1.weapon and p1.weapon.durability > 500):
+            p1.weapon.durability = 500
+        if(p2.weapon and p2.weapon.durability > 500):
+            p2.weapon.durability = 500
+
+        # mana
+        if(p1.max_mana > 10):
+            p1.max_mana = 10
+        if(p2.max_mana > 10):
+            p2.max_mana = 10
+
+        #cards
+        while(len(p1.hand) > 10):
+            p1.hand[-1].zone = Zone.GRAVEYARD
+        while(len(p2.hand) > 10):
+            p2.hand[-1].zone = Zone.GRAVEYARD
+
+        # field
+        while(len(p1.field) > 7):
+            p1.field[-1].zone = Zone.GRAVEYARD
+        while(len(p2.field) > 7):
+            p2.field[-1].zone = Zone.GRAVEYARD
+
+        # secrets
+        while(len(p1.secrets) > 5):
+            p1.secrets[-1].zone = Zone.GRAVEYARD
+        while(len(p2.secrets) > 5):
+            p2.secrets[-1].zone = Zone.GRAVEYARD
 
         ## When a card is deleted from the the hand or field lists, the indexes change
         # I needed to save the indexes or iterate the list from end to begining

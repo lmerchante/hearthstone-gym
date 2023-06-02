@@ -1,3 +1,7 @@
+# from typing import Dict, Tuple, Union
+# import torch as th
+# from torch.nn import functional as F
+
 from gymnasium import spaces
 from hearthstone.enums import CardClass,CardSet, CardType
 from fireplace import cards
@@ -914,3 +918,38 @@ observation_space = spaces.Dict({
             "myfield6canattack": spaces.Discrete(2),
             "myherocanattack": spaces.Discrete(2)
         })
+
+# Function that is giving an error in stable Baselines Dqn
+# def preprocess_obs(
+#     obs: th.Tensor,
+#     observation_space: spaces.Space,
+#     normalize_images: bool = True,
+# ) -> Union[th.Tensor, Dict[str, th.Tensor]]:
+#     """
+#     Preprocess observation to be to a neural network.
+#     For images, it normalizes the values by dividing them by 255 (to have values in [0, 1])
+#     For discrete observations, it create a one hot vector.
+
+#     :param obs: Observation
+#     :param observation_space:
+#     :param normalize_images: Whether to normalize images or not
+#         (True by default)
+#     :return:
+#     """
+
+#     if isinstance(observation_space, spaces.Discrete):
+#         # One hot encoding and convert to float to avoid errors
+#         return F.one_hot(obs.long(), num_classes=observation_space.n).float()
+
+
+#     elif isinstance(observation_space, spaces.Dict):
+#         # Do not modify by reference the original observation
+#         assert isinstance(obs, Dict), f"Expected dict, got {type(obs)}"
+#         preprocessed_obs = {}
+#         for key, _obs in obs.items():
+#             preprocessed_obs[key] = preprocess_obs(_obs, observation_space[key], normalize_images=normalize_images)
+#         return preprocessed_obs
+
+#     else:
+#         raise NotImplementedError(f"Preprocessing not implemented for {observation_space}")
+
