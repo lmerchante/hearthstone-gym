@@ -204,6 +204,8 @@ class HearthstoneUnnestedEnv(gym.Env):
         print("------------------------")
         print(">>> Current Step {}".format(self.curr_step))
         print("------------------------")
+
+        ## If there is an error during the step logic we will reset the env.
         try:
             self._take_action(action)
 
@@ -231,6 +233,35 @@ class HearthstoneUnnestedEnv(gym.Env):
             self.reward_dict[self.curr_episode] += reward
 
             ob=self._get_state()
+
+            ## trubleshooting Error Num_classses
+            try:
+                env_setup.preprocess_obs(ob)
+            except Exception as e:
+                print(e)
+                data_file = open('PreprocessError.txt', 'w')
+                data_file.write("New Error \n")
+                data_file.write(e)
+                data_file.write("\n")
+                data_file.write("Print Obs and num_classes")
+                observation_space = env_setup.obs_space
+                for key, _obs in ob.items():
+                    data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
+                    data_file.write("observation : " + str(_obs) )
+                    data_file.write("num_classes : " +
+                                    str(observation_space[key].n))
+                    
+                data_file.write("\n \n")
+                data_file.close()
+
+                self.errors += 1
+                terminated = True
+                ob = self.reset()   
+                reward = 0
+                return ob, reward, terminated, {}
+
+
+
             return ob, reward, terminated, {}
         except:
             self.errors += 1 
@@ -530,53 +561,53 @@ class HearthstoneUnnestedEnv(gym.Env):
         p1=player
         p2=player.opponent
 
-        #### Making sure that the observation space contains the values
-        # hero's health
-        if(p1.hero.health > 30):
-            p1.hero.health = 30
-        if(p2.hero.health > 30):
-            p2.hero.health = 30
+        # #### Making sure that the observation space contains the values
+        # # hero's health
+        # if(p1.hero.health > 30):
+        #     p1.hero.health = 30
+        # if(p2.hero.health > 30):
+        #     p2.hero.health = 30
 
-        # hero's armor
-        if(p1.hero.armor > 500):
-            p1.hero.armor = 500
-        if(p2.hero.armor > 500):
-            p2.hero.armor = 500
+        # # hero's armor
+        # if(p1.hero.armor > 500):
+        #     p1.hero.armor = 500
+        # if(p2.hero.armor > 500):
+        #     p2.hero.armor = 500
 
-        # hero's weapon
-        if(p1.weapon and p1.weapon.atk > 500):
-            p1.weapon.atk = 500
-        if(p2.weapon and p2.weapon.atk > 500):
-            p2.weapon.atk = 500
+        # # hero's weapon
+        # if(p1.weapon and p1.weapon.atk > 500):
+        #     p1.weapon.atk = 500
+        # if(p2.weapon and p2.weapon.atk > 500):
+        #     p2.weapon.atk = 500
 
-        if(p1.weapon and p1.weapon.durability > 500):
-            p1.weapon.durability = 500
-        if(p2.weapon and p2.weapon.durability > 500):
-            p2.weapon.durability = 500
+        # if(p1.weapon and p1.weapon.durability > 500):
+        #     p1.weapon.durability = 500
+        # if(p2.weapon and p2.weapon.durability > 500):
+        #     p2.weapon.durability = 500
 
-        # mana
-        if(p1.max_mana > 10):
-            p1.max_mana = 10
-        if(p2.max_mana > 10):
-            p2.max_mana = 10
+        # # mana
+        # if(p1.max_mana > 10):
+        #     p1.max_mana = 10
+        # if(p2.max_mana > 10):
+        #     p2.max_mana = 10
 
-        #cards
-        while(len(p1.hand) > 10):
-            p1.hand[-1].zone = Zone.GRAVEYARD
-        while(len(p2.hand) > 10):
-            p2.hand[-1].zone = Zone.GRAVEYARD
+        # #cards
+        # while(len(p1.hand) > 10):
+        #     p1.hand[-1].zone = Zone.GRAVEYARD
+        # while(len(p2.hand) > 10):
+        #     p2.hand[-1].zone = Zone.GRAVEYARD
 
-        # field
-        while(len(p1.field) > 7):
-            p1.field[-1].zone = Zone.GRAVEYARD
-        while(len(p2.field) > 7):
-            p2.field[-1].zone = Zone.GRAVEYARD
+        # # field
+        # while(len(p1.field) > 7):
+        #     p1.field[-1].zone = Zone.GRAVEYARD
+        # while(len(p2.field) > 7):
+        #     p2.field[-1].zone = Zone.GRAVEYARD
 
-        # secrets
-        while(len(p1.secrets) > 5):
-            p1.secrets[-1].zone = Zone.GRAVEYARD
-        while(len(p2.secrets) > 5):
-            p2.secrets[-1].zone = Zone.GRAVEYARD
+        # # secrets
+        # while(len(p1.secrets) > 5):
+        #     p1.secrets[-1].zone = Zone.GRAVEYARD
+        # while(len(p2.secrets) > 5):
+        #     p2.secrets[-1].zone = Zone.GRAVEYARD
 
         ## When a card is deleted from the the hand or field lists, the indexes change
         # I needed to save the indexes or iterate the list from end to begining
