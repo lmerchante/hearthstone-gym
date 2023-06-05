@@ -206,67 +206,67 @@ class HearthstoneUnnestedEnv(gym.Env):
         print("------------------------")
 
         ## If there is an error during the step logic we will reset the env.
-        try:
-            self._take_action(action)
+        # try:
+        self._take_action(action)
 
-            terminated = False
-            ## change episode count each time the game finishes
-            if (self.game.player1.hero.health < 1 and self.game.player2.hero.health < 1):
-                self.curr_episode += 1
-                self.ties += 1
-                self.games_outcome.append(0)
-                terminated = True
-            elif self.game.player1.hero.health < 1:
-                self.curr_episode += 1
-                self.losses += 1
-                self.games_outcome.append(-1)
-
-                terminated = True
-
-            elif self.game.player2.hero.health < 1:
-                self.curr_episode += 1
-                self.wins += 1
-                self.games_outcome.append(1)
-                terminated = True
-            
-            reward=self._get_reward()
-            self.total_reward += reward
-            self.reward_dict[self.curr_episode] += reward
-
-            ob=self._get_state()
-
-            ## trubleshooting Error Num_classses
-            # try:
-            #     env_setup.preprocess_obs(ob)
-            # except Exception as e:
-            #     print(e)
-            #     data_file = open('PreprocessError.txt', 'w')
-            #     data_file.write("New Error \n")
-            #     data_file.write(e)
-            #     data_file.write("\n")
-            #     data_file.write("Print Obs and num_classes")
-            #     observation_space = env_setup.obs_space
-            #     for key, _obs in ob.items():
-            #         data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
-            #         data_file.write("observation : " + str(_obs) )
-            #         data_file.write("num_classes : " +
-            #                         str(observation_space[key].n))
-                    
-            #     data_file.write("\n \n")
-            #     data_file.close()
-
-            #     self.errors += 1
-            #     terminated = True
-            #     ob = self.reset()   
-            #     reward = 0
-            #     return ob, reward, terminated, {}
-            return ob, reward, terminated, {}
-        except:
-            self.errors += 1 
+        terminated = False
+        ## change episode count each time the game finishes
+        if (self.game.player1.hero.health < 1 and self.game.player2.hero.health < 1):
+            self.curr_episode += 1
+            self.ties += 1
+            self.games_outcome.append(0)
             terminated = True
-            ob = self.reset()
-            reward = 0
-            return ob, reward, terminated, {}
+        elif self.game.player1.hero.health < 1:
+            self.curr_episode += 1
+            self.losses += 1
+            self.games_outcome.append(-1)
+
+            terminated = True
+
+        elif self.game.player2.hero.health < 1:
+            self.curr_episode += 1
+            self.wins += 1
+            self.games_outcome.append(1)
+            terminated = True
+        
+        reward=self._get_reward()
+        self.total_reward += reward
+        self.reward_dict[self.curr_episode] += reward
+
+        ob=self._get_state()
+
+        ## trubleshooting Error Num_classses
+        # try:
+        #     env_setup.preprocess_obs(ob)
+        # except Exception as e:
+        #     print(e)
+        #     data_file = open('PreprocessError.txt', 'w')
+        #     data_file.write("New Error \n")
+        #     data_file.write(e)
+        #     data_file.write("\n")
+        #     data_file.write("Print Obs and num_classes")
+        #     observation_space = env_setup.obs_space
+        #     for key, _obs in ob.items():
+        #         data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
+        #         data_file.write("observation : " + str(_obs) )
+        #         data_file.write("num_classes : " +
+        #                         str(observation_space[key].n))
+                
+        #     data_file.write("\n \n")
+        #     data_file.close()
+
+        #     self.errors += 1
+        #     terminated = True
+        #     ob = self.reset()   
+        #     reward = 0
+        #     return ob, reward, terminated, {}
+        return ob, reward, terminated, {}
+        # except:
+        #     self.errors += 1 
+        #     terminated = True
+        #     ob = self.reset()
+        #     reward = 0
+        #     return ob, reward, terminated, {}
 
     def _take_action(self, action):
         """
@@ -378,7 +378,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         except exceptions.GameOver:
             return True
         except Exception as e:
-            # print("Ran into exception: {} While executing move {} for player {}. Game State:".format(str(e), move, self.playerJustMoved))
+            print("Ran into exception: {} While executing move {} for player {}. Game State:".format(str(e), move, self.playerJustMoved))
             # self.render()
             exceptionTester.append(1) # array will eval to True
 

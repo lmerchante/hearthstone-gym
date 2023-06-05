@@ -939,7 +939,10 @@ def preprocess_obs(
 
     if isinstance(observation_space, spaces.Discrete):
         # One hot encoding and convert to float to avoid errors
-        return F.one_hot(th.tensor(obs), num_classes=observation_space.n+1).float()
+        tmp=th.tensor(obs)
+        if tmp==observation_space.n:
+            tmp=tmp-1
+        return F.one_hot(tmp, num_classes=observation_space.n).float()
 
 
     elif isinstance(observation_space, spaces.Dict):
