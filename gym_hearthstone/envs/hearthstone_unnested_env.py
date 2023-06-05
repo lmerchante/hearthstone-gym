@@ -228,6 +228,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.wins += 1
                 self.games_outcome.append(1)
                 terminated = True
+            
             reward=self._get_reward()
             self.total_reward += reward
             self.reward_dict[self.curr_episode] += reward
@@ -235,33 +236,30 @@ class HearthstoneUnnestedEnv(gym.Env):
             ob=self._get_state()
 
             ## trubleshooting Error Num_classses
-            try:
-                env_setup.preprocess_obs(ob)
-            except Exception as e:
-                print(e)
-                data_file = open('PreprocessError.txt', 'w')
-                data_file.write("New Error \n")
-                data_file.write(e)
-                data_file.write("\n")
-                data_file.write("Print Obs and num_classes")
-                observation_space = env_setup.obs_space
-                for key, _obs in ob.items():
-                    data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
-                    data_file.write("observation : " + str(_obs) )
-                    data_file.write("num_classes : " +
-                                    str(observation_space[key].n))
+            # try:
+            #     env_setup.preprocess_obs(ob)
+            # except Exception as e:
+            #     print(e)
+            #     data_file = open('PreprocessError.txt', 'w')
+            #     data_file.write("New Error \n")
+            #     data_file.write(e)
+            #     data_file.write("\n")
+            #     data_file.write("Print Obs and num_classes")
+            #     observation_space = env_setup.obs_space
+            #     for key, _obs in ob.items():
+            #         data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
+            #         data_file.write("observation : " + str(_obs) )
+            #         data_file.write("num_classes : " +
+            #                         str(observation_space[key].n))
                     
-                data_file.write("\n \n")
-                data_file.close()
+            #     data_file.write("\n \n")
+            #     data_file.close()
 
-                self.errors += 1
-                terminated = True
-                ob = self.reset()   
-                reward = 0
-                return ob, reward, terminated, {}
-
-
-
+            #     self.errors += 1
+            #     terminated = True
+            #     ob = self.reset()   
+            #     reward = 0
+            #     return ob, reward, terminated, {}
             return ob, reward, terminated, {}
         except:
             self.errors += 1 
