@@ -210,6 +210,9 @@ class HearthstoneUnnestedEnv(gym.Env):
         self._take_action(action)
 
         terminated = False
+        reward=self._get_reward()
+        self.total_reward += reward
+        self.reward_dict[self.curr_episode] += reward
         ## change episode count each time the game finishes
         if (self.game.player1.hero.health < 1 and self.game.player2.hero.health < 1):
             self.curr_episode += 1
@@ -220,18 +223,12 @@ class HearthstoneUnnestedEnv(gym.Env):
             self.curr_episode += 1
             self.losses += 1
             self.games_outcome.append(-1)
-
             terminated = True
-
         elif self.game.player2.hero.health < 1:
             self.curr_episode += 1
             self.wins += 1
             self.games_outcome.append(1)
             terminated = True
-        
-        reward=self._get_reward()
-        self.total_reward += reward
-        self.reward_dict[self.curr_episode] += reward
 
         ob=self._get_state()
 
@@ -378,7 +375,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         except exceptions.GameOver:
             return True
         except Exception as e:
-            print("Ran into exception: {} While executing move {} for player {}. Game State:".format(str(e), move, self.playerJustMoved))
+            print("Ran into exception: {} While executing move {}. Game State:".format(str(e), move))
             # self.render()
             exceptionTester.append(1) # array will eval to True
 
