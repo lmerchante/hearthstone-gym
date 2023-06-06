@@ -923,7 +923,7 @@ obs_space = spaces.Dict({
 def preprocess_obs(
     obs: th.Tensor,
     observation_space: spaces.Space = obs_space,
-    normalize_images: bool = True,
+    normalize_images: bool = False,
 ) -> Union[th.Tensor, Dict[str, th.Tensor]]:
     """
     Preprocess observation to be to a neural network.
@@ -939,7 +939,16 @@ def preprocess_obs(
 
     if isinstance(observation_space, spaces.Discrete):
         # One hot encoding and convert to float to avoid errors
-        tmp=th.tensor(obs)
+        tmp=obs.long()
+        
+        try:
+            if tmp==observation_space.n:
+                pass
+        except:
+            print(tmp.size())
+            print(tmp)
+            print(observation_space.n)
+            
         if tmp==observation_space.n:
             tmp=tmp-1
         return F.one_hot(tmp, num_classes=observation_space.n).float()
@@ -950,7 +959,7 @@ def preprocess_obs(
         assert isinstance(obs, Dict), f"Expected dict, got {type(obs)}"
         preprocessed_obs = {}
         for key, _obs in obs.items():
-            preprocessed_obs[key] = preprocess_obs(_obs, observation_space[key])
+            preprocessed_obs[key] = preprocess_obs(_obs, observation_space[key], normalize_images=False)
         return preprocessed_obs
 
     else:

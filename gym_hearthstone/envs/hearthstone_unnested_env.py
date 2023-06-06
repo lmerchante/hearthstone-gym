@@ -82,6 +82,9 @@ class HearthstoneUnnestedEnv(gym.Env):
         self.setup_game()
 
     def reset(self):
+        print("------------------------")
+        print(">>> Episode {}".format(self.curr_episode))
+        print("------------------------")
         self.setup_game()
         return self._get_state()
 
@@ -233,24 +236,24 @@ class HearthstoneUnnestedEnv(gym.Env):
         ob=self._get_state()
 
         ## trubleshooting Error Num_classses
-        # try:
-        #     env_setup.preprocess_obs(ob)
-        # except Exception as e:
-        #     print(e)
-        #     data_file = open('PreprocessError.txt', 'w')
-        #     data_file.write("New Error \n")
-        #     data_file.write(e)
-        #     data_file.write("\n")
-        #     data_file.write("Print Obs and num_classes")
-        #     observation_space = env_setup.obs_space
-        #     for key, _obs in ob.items():
-        #         data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
-        #         data_file.write("observation : " + str(_obs) )
-        #         data_file.write("num_classes : " +
-        #                         str(observation_space[key].n))
+        try:
+            env_setup.preprocess_obs(ob)
+        except Exception as e:
+             print(e)
+             data_file = open('PreprocessError.txt', 'w')
+             data_file.write("New Error \n")
+             data_file.write(e)
+             data_file.write("\n")
+             data_file.write("Print Obs and num_classes")
+             observation_space = env_setup.obs_space
+             for key, _obs in ob.items():
+                 data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
+                 data_file.write("observation : " + str(_obs) )
+                 data_file.write("num_classes : " +
+                                 str(observation_space[key].n))
                 
-        #     data_file.write("\n \n")
-        #     data_file.close()
+             data_file.write("\n \n")
+             data_file.close()
 
         #     self.errors += 1
         #     terminated = True
@@ -274,14 +277,14 @@ class HearthstoneUnnestedEnv(gym.Env):
         """
         possible_actions, dict_moves = self.__getMoves(); #get valid moves
         print("")
-        print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
-        print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
+        print(">>> Before possible_actions {}:{}".format(len(possible_actions),possible_actions))
+        print(">>> Already Selected Actions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
         for a in self.alreadySelectedActions:
             try:
                 possible_actions.remove(a)
             except:
                 print("The action in the selected actions is not in possible actions!!!")        
-        print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
+        print(">>> After possible_actions {}:{}".format(len(possible_actions),possible_actions))
 
 
 
@@ -293,7 +296,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         
         if agent_action:  
             if agent_action[0] == Move.end_turn:
-                print("doing end turn for AI")
+                print("Doing end turn for RL Agent")
                 self.__doMove(agent_action)
                 self.alreadySelectedActions=[]
 
@@ -305,7 +308,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                     print(possible_actions)
                     action = random.choice(possible_actions) #pick a random one
                     while action[0] != Move.end_turn: #if it's not end turn
-                        print("doing single turn for rando")
+                        print("Doing single turn for random Opponent")
                         print("Doing action: {}".format(action))
                         self.alreadySelectedActions.append(action)
                         self.__doMove(action) #do it
@@ -314,8 +317,8 @@ class HearthstoneUnnestedEnv(gym.Env):
                         ## When rando wins or losses the while breaks
                         if(self.game.player1.hero.health <=0 or self.game.player2.hero.health <= 0):
                             break
-                        print(">>> possible_actions {}:{}".format(len(possible_actions),possible_actions))
-                        print(">>> alreadySelectedActions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
+                        print(">>> Possible_actions for random Opponent {}:{}".format(len(possible_actions),possible_actions))
+                        print(">>> Already Selected Actions for random Opponent {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
                         for a in self.alreadySelectedActions:
                             try:
                                 possible_actions.remove(a)
@@ -323,14 +326,14 @@ class HearthstoneUnnestedEnv(gym.Env):
                                 print("The action in the selected actions is not in possible actions!!!")
                         action=random.choice(possible_actions) #and pick a random one
                 print("")
-                print("doing end turn for rando")
+                print("Doing end turn for random Opponent")
                 print("Doing action: {}".format(action))
                 # Game is not over
                 if(self.game.player1.hero.health > 0 or self.game.player2.hero.health > 0):
                     self.__doMove(action) #end random player's turn
                 self.alreadySelectedActions=[]
             else: #otherwise we just do the single AI action and keep track so its not used again
-                print("doing single action for AI"+str(agent_action))
+                print("Doing single action for RL Agent"+str(agent_action))
                 self.__doMove(agent_action)
                 self.alreadySelectedActions.append(agent_action)
 

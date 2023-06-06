@@ -815,24 +815,24 @@ class HearthstoneEnv(gym.Env):
             possible_actions.append(possible_actions[counter])
             counter=counter+1
         if possible_actions[action] == Move.end_turn: #if AI is ending turn - we need to register a random move for the other/random player
-            print("doing end turn for AI")
+            print("Doing end turn for RL Agent")
             self.__doMove(possible_actions[action]) #do the AI Turn to swap game to the random player's turn
             self.alreadySelectedActions=[]
             possible_actions=self.__getMoves() #get the random player's actions
             action = random.choice(possible_actions) #pick a random one
             while action != Move.end_turn: #if it's not end turn
-                print("doing single turn for rando")
+                print("Doing single turn for random Opponent")
                 self.alreadySelectedActions.append(action)
                 self.__doMove(action) #do it
                 possible_actions=self.__getMoves() #and get the new set of actions
                 for a in self.alreadySelectedActions:
                     possible_actions.remove(a)
                 action=random.choice(possible_actions) #and pick a random one
-            print("doing end turn for rando")
+            print("Doing end turn for random Opponent")
             self.__doMove(action) #end random player's turn
             self.alreadySelectedActions=[]
         else: #otherwise we just do the single AI action and keep track so its not used again
-            print("doing single action for AI"+str(possible_actions[action]))
+            print("Doing single action for RL Agent"+str(possible_actions[action]))
             self.__doMove(possible_actions[action])
             self.alreadySelectedActions.append(possible_actions[action])
 
