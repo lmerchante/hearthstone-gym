@@ -939,8 +939,10 @@ def preprocess_obs(
 
     if isinstance(observation_space, spaces.Discrete):
         # One hot encoding and convert to float to avoid errors
-        tmp=obs.long()
-        
+        if not isinstance(obs,int):
+            tmp=obs.long()
+        else:
+            tmp=obs
         try:
             if tmp==observation_space.n:
                 pass
@@ -951,7 +953,7 @@ def preprocess_obs(
             
         if tmp==observation_space.n:
             tmp=tmp-1
-        return F.one_hot(tmp, num_classes=observation_space.n).float()
+        return True #F.one_hot(tmp, num_classes=observation_space.n).float()
 
 
     elif isinstance(observation_space, spaces.Dict):

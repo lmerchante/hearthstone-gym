@@ -242,7 +242,7 @@ class HearthstoneUnnestedEnv(gym.Env):
              print(e)
              data_file = open('PreprocessError.txt', 'w')
              data_file.write("New Error \n")
-             data_file.write(e)
+             data_file.write(str(e))
              data_file.write("\n")
              data_file.write("Print Obs and num_classes")
              observation_space = env_setup.obs_space
@@ -277,24 +277,27 @@ class HearthstoneUnnestedEnv(gym.Env):
         """
         possible_actions, dict_moves = self.__getMoves(); #get valid moves
         print("")
-        print(">>> Before possible_actions {}:{}".format(len(possible_actions),possible_actions))
-        print(">>> Already Selected Actions {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
+        print(">>> Before possible_actions RL agent {}:{}".format(len(possible_actions),possible_actions))
+        print(">>> Already Selected Actions RL agent {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
         for a in self.alreadySelectedActions:
             try:
                 possible_actions.remove(a)
             except:
                 print("The action in the selected actions is not in possible actions!!!")        
-        print(">>> After possible_actions {}:{}".format(len(possible_actions),possible_actions))
+        print(">>> After possible_actions RL agent {}:{}".format(len(possible_actions),possible_actions))
 
 
 
         if self.action_type == "random":
             agent_action = random.choice(possible_actions)
+            print(">>> PLAYER: RL MODE: random. SELECTED ACTION {}".format(agent_action))
 
         elif (self.action_type == "type" or self.action_type == "type_rd"):
             agent_action, self.legal_action = self._map_type_action(action, dict_moves, possible_actions)
-        
+            print(">>> PLAYER: RL MODE: type or type_rd. SELECTED ACTION {} LEGAL: {}".format(agent_action, self.legal_action))
+            
         if agent_action:  
+            print(">>> PLAYER: RL ACTION SELECTED")
             if agent_action[0] == Move.end_turn:
                 print("Doing end turn for RL Agent")
                 self.__doMove(agent_action)
@@ -305,8 +308,9 @@ class HearthstoneUnnestedEnv(gym.Env):
                 # This implementation also takes into account any card that kills the oponent at the end of the turn
                 if self.game.player2.hero.health > 0:
                     possible_actions, dict_moves =self.__getMoves() #get the random player's actions
-                    print(possible_actions)
+                    print(">>> Possible_actions random Opponent {}:{}".format(len(possible_actions),possible_actions))
                     action = random.choice(possible_actions) #pick a random one
+                    print(">>> PLAYER: RandomOpponent  SELECTED ACTION {}".format(agent_action))
                     while action[0] != Move.end_turn: #if it's not end turn
                         print("Doing single turn for random Opponent")
                         print("Doing action: {}".format(action))
@@ -317,14 +321,16 @@ class HearthstoneUnnestedEnv(gym.Env):
                         ## When rando wins or losses the while breaks
                         if(self.game.player1.hero.health <=0 or self.game.player2.hero.health <= 0):
                             break
-                        print(">>> Possible_actions for random Opponent {}:{}".format(len(possible_actions),possible_actions))
+                        print(">>> Before Possible_actions for random Opponent {}:{}".format(len(possible_actions),possible_actions))
                         print(">>> Already Selected Actions for random Opponent {}:{}".format(len(self.alreadySelectedActions),self.alreadySelectedActions))
                         for a in self.alreadySelectedActions:
                             try:
                                 possible_actions.remove(a)
                             except:
                                 print("The action in the selected actions is not in possible actions!!!")
+                        print(">>> After Possible_actions for random Opponent {}:{}".format(len(possible_actions),possible_actions))
                         action=random.choice(possible_actions) #and pick a random one
+                        print(">>> PLAYER: RandomOpponent  SELECTED ACTION {}".format(agent_action))
                 print("")
                 print("Doing end turn for random Opponent")
                 print("Doing action: {}".format(action))
