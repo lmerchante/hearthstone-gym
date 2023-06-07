@@ -497,7 +497,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             valid_moves.append([Move.end_turn])
             dict_moves["end_turn"].append([Move.end_turn])
         #print("Moves Dictionary")
-        print(dict_moves)
+        print(">>> Moves Dictionary: ",dict_moves)
         return valid_moves, dict_moves
     
 
@@ -630,14 +630,14 @@ class HearthstoneUnnestedEnv(gym.Env):
 
             if( 9-i < len(p1.hand)):
                 try:
-                    print(implemented_cards.index(p1.hand[9-i]))
+                    print(">>> HANDP1: ",implemented_cards.index(p1.hand[9-i]),p1.hand[9-i])
                 except:
                     p1.hand[9-i].zone = Zone.GRAVEYARD            
 
         for i in range(10):
             if( 9-i < len(p1.field)):
                 try:
-                    print(implemented_cards.index(p1.field[9-i]))
+                    print(">>> FIELDP1: ",implemented_cards.index(p1.field[9-i]),p1.field[9-i])
                 except:
                     p1.field[9-i].zone = Zone.GRAVEYARD
             
@@ -648,14 +648,14 @@ class HearthstoneUnnestedEnv(gym.Env):
 
             if( 9-i < len(p2.hand)):
                 try:
-                    print(implemented_cards.index(p2.hand[9-i]))
+                    print(">>> HANDP2: ",implemented_cards.index(p2.hand[9-i]), p2.hand[9-i])
                 except:
                     p2.hand[9-i].zone = Zone.GRAVEYARD
 
         for i in range(10):
             if( 9-i < len(p2.field)):
                 try:
-                    print(implemented_cards.index(p2.field[9-i]))
+                    print(">>> FIELDP2: ",implemented_cards.index(p2.field[9-i]),p2.field[9-i])
                 except:
                     p2.field[9-i].zone = Zone.GRAVEYARD
             
