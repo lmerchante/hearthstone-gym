@@ -70,8 +70,10 @@ class HearthstoneUnnestedEnv(gym.Env):
         self.observation_space = env_setup.get_obs_space()
         
         # Define stats
+        self.tot_step = 0
         self.curr_step = -1
         self.curr_episode=0
+        self.max_steps = 400
         self.wins = 0
         self.ties = 0
         self.losses = 0
@@ -89,6 +91,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         return self._get_state()
 
     def reset_stats(self):
+        self.tot_step = 0
         self.curr_episode = 0
         self.curr_step = 0
         self.wins = 0
@@ -99,6 +102,7 @@ class HearthstoneUnnestedEnv(gym.Env):
 
     def display_stats(self):
         print("-----------STATS------------")
+        print("Number of Steps: " + str(self.tot_step))
         print("Number of Games: " + str(self.curr_episode))
         print("Number of Wins: " + str(self.wins))
         print("Number of Losses: " + str(self.losses))
@@ -204,9 +208,10 @@ class HearthstoneUnnestedEnv(gym.Env):
                  use this for learning.
         """
         self.curr_step += 1
-        print("------------------------")
-        print(">>> Current Step {}".format(self.curr_step))
-        print("------------------------")
+        self.tot_step += 1
+        print("------------------------------------------")
+        print(">>> Current Step {}, Global {}, Average {}".format(self.curr_step, self.tot_step, round(self.tot_step/(self.curr_episode+1))))
+        print("------------------------------------------")
 
         ## If there is an error during the step logic we will reset the env.
         # try:
@@ -233,28 +238,34 @@ class HearthstoneUnnestedEnv(gym.Env):
             self.games_outcome.append(1)
             terminated = True
 
+        if self.curr_step > self.max_steps:
+            self.curr_episode += 1
+            self.errors += 1
+            self.games_outcome.append(-999)
+            terminated = True
+            
         ob=self._get_state()
 
         ## trubleshooting Error Num_classses
-        try:
-            env_setup.preprocess_obs(ob)
-        except Exception as e:
-             print(e)
-             data_file = open('PreprocessError.txt', 'w')
-             data_file.write("New Error \n")
-             data_file.write(str(e))
-             data_file.write("\n")
-             data_file.write("Print Obs and num_classes")
-             observation_space = env_setup.obs_space
-             for key, _obs in ob.items():
-                 data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
-                 data_file.write("observation : " + str(_obs) )
-                 data_file.write("num_classes : " +
-                                 str(observation_space[key].n))
-                
-             data_file.write("\n \n")
-             data_file.close()
-
+        #try:
+        #    env_setup.preprocess_obs(ob)
+        #except Exception as e:
+        #     print(e)
+        #     data_file = open('PreprocessError.txt', 'w')
+        #     data_file.write("New Error \n")
+        #     data_file.write(str(e))
+        #     data_file.write("\n")
+        #     data_file.write("Print Obs and num_classes")
+        #     observation_space = env_setup.obs_space
+        #     for key, _obs in ob.items():
+        #         data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
+        #         data_file.write("observation : " + str(_obs) )
+        #         data_file.write("num_classes : " +
+        #                         str(observation_space[key].n))
+        #        
+        #     data_file.write("\n \n")
+        #     data_file.close()
+        #
         #     self.errors += 1
         #     terminated = True
         #     ob = self.reset()   
@@ -283,7 +294,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             try:
                 possible_actions.remove(a)
             except:
-                print("The action in the selected actions is not in possible actions!!!")        
+                print(">>> The action in the selected actions is not in possible actions!!!")        
         print(">>> After possible_actions RL agent {}:{}".format(len(possible_actions),possible_actions))
 
 
@@ -299,7 +310,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         if agent_action:  
             print(">>> PLAYER: RL ACTION SELECTED")
             if agent_action[0] == Move.end_turn:
-                print("Doing end turn for RL Agent")
+                print(">>> Doing end turn for RL Agent")
                 self.__doMove(agent_action)
                 self.alreadySelectedActions=[]
 
@@ -312,8 +323,8 @@ class HearthstoneUnnestedEnv(gym.Env):
                     action = random.choice(possible_actions) #pick a random one
                     print(">>> PLAYER: RandomOpponent  SELECTED ACTION {}".format(agent_action))
                     while action[0] != Move.end_turn: #if it's not end turn
-                        print("Doing single turn for random Opponent")
-                        print("Doing action: {}".format(action))
+                        print(">>> Doing single turn for random Opponent")
+                        print(">>> Doing action: {}".format(action))
                         self.alreadySelectedActions.append(action)
                         self.__doMove(action) #do it
                         possible_actions, dict_moves =self.__getMoves() #and get the new set of actions
@@ -332,14 +343,14 @@ class HearthstoneUnnestedEnv(gym.Env):
                         action=random.choice(possible_actions) #and pick a random one
                         print(">>> PLAYER: RandomOpponent  SELECTED ACTION {}".format(agent_action))
                 print("")
-                print("Doing end turn for random Opponent")
-                print("Doing action: {}".format(action))
+                print(">>> Doing end turn for random Opponent")
+                print(">>> Doing action: {}".format(action))
                 # Game is not over
                 if(self.game.player1.hero.health > 0 or self.game.player2.hero.health > 0):
                     self.__doMove(action) #end random player's turn
                 self.alreadySelectedActions=[]
             else: #otherwise we just do the single AI action and keep track so its not used again
-                print("Doing single action for RL Agent"+str(agent_action))
+                print(">>> Doing single action for RL Agent"+str(agent_action))
                 self.__doMove(agent_action)
                 self.alreadySelectedActions.append(agent_action)
 
