@@ -87,6 +87,9 @@ class HearthstoneUnnestedEnv(gym.Env):
         print("------------------------")
         print(">>> Episode {}".format(self.curr_episode))
         print("------------------------")
+        # Just discovered that the variables are not reset in fireplace when you create a new game
+        # We will have to reset hand, field, secrets for both players
+
         self.setup_game()
         return self._get_state()
 
@@ -303,10 +306,14 @@ class HearthstoneUnnestedEnv(gym.Env):
             agent_action = random.choice(possible_actions)
             print(">>> PLAYER: RL MODE: random. SELECTED ACTION {}".format(agent_action))
 
+        # If the action is not legal:
+        # 'type' will retrieve None
+        # 'type-rd' will choose a random action from possible actions
         elif (self.action_type == "type" or self.action_type == "type_rd"):
             agent_action, self.legal_action = self._map_type_action(action, dict_moves, possible_actions)
             print(">>> PLAYER: RL MODE: type or type_rd. SELECTED ACTION {} LEGAL: {}".format(agent_action, self.legal_action))
             
+        # This
         if agent_action:  
             print(">>> PLAYER: RL ACTION SELECTED")
             if agent_action[0] == Move.end_turn:
@@ -314,10 +321,10 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.__doMove(agent_action)
                 self.alreadySelectedActions=[]
 
-                ## There was an error when the hero died at the begining of its turn (Fatigue)
+                ## There was an error when the hero (Random Agent) died at the begining of its turn (Fatigue)
                 # We need to take this case into consideration
                 # This implementation also takes into account any card that kills the oponent at the end of the turn
-                if self.game.player2.hero.health > 0:
+                if self.game.player2.hero.health > 0 and self.game.player1.hero.health > 0:
                     possible_actions, dict_moves =self.__getMoves() #get the random player's actions
                     print(">>> Possible_actions random Opponent {}:{}".format(len(possible_actions),possible_actions))
                     action = random.choice(possible_actions) #pick a random one
@@ -626,38 +633,61 @@ class HearthstoneUnnestedEnv(gym.Env):
 
         ## When a card is deleted from the the hand or field lists, the indexes change
         # I needed to save the indexes or iterate the list from end to begining
-        for i in range(10):
+        l = len(p1.hand)
+        counter = 0
+        for i in range(l):
 
-            if( 9-i < len(p1.hand)):
-                try:
-                    print(">>> HANDP1: ",implemented_cards.index(p1.hand[9-i]),p1.hand[9-i])
-                except:
-                    p1.hand[9-i].zone = Zone.GRAVEYARD            
+            try:
+                print(">>> HANDP1: ",implemented_cards.index(p1.hand[counter]),p1.hand[counter])
+                counter += 1
+            except:
+                p1.hand[counter].zone = Zone.GRAVEYARD     
 
-        for i in range(10):
-            if( 9-i < len(p1.field)):
-                try:
-                    print(">>> FIELDP1: ",implemented_cards.index(p1.field[9-i]),p1.field[9-i])
-                except:
-                    p1.field[9-i].zone = Zone.GRAVEYARD
+            ## check if something is an enchantment
+            if(p1.hand[counter].type == 6):
+                p1.hand[counter].zone = Zone.GRAVEYARD
+
+        l = len(p1.field)
+        counter = 0
+        for i in range(l):
+
+            try:
+                print(">>> FIELDP1: ",implemented_cards.index(p1.field[counter]),p1.field[counter])
+                counter += 1
+            except:
+                p1.field[counter].zone = Zone.GRAVEYARD
+            
+            if (p1.field[counter].type == 6):
+                p1.field[counter].zone = Zone.GRAVEYARD
             
 
 
         ## Repeat the process for the opponent
-        for i in range(10):
+        l = len(p2.hand)
+        counter = 0
+        for i in range(l):
 
-            if( 9-i < len(p2.hand)):
-                try:
-                    print(">>> HANDP2: ",implemented_cards.index(p2.hand[9-i]), p2.hand[9-i])
-                except:
-                    p2.hand[9-i].zone = Zone.GRAVEYARD
+            try:
+                print(">>> HANDP2: ",implemented_cards.index(p2.hand[counter]), p2.hand[counter])
+                counter += 1
+            except:
+                p2.hand[counter].zone = Zone.GRAVEYARD
+            
+            if (p2.hand[counter].type == 6):
+                p2.hand[counter].zone = Zone.GRAVEYARD
 
-        for i in range(10):
-            if( 9-i < len(p2.field)):
-                try:
-                    print(">>> FIELDP2: ",implemented_cards.index(p2.field[9-i]),p2.field[9-i])
-                except:
-                    p2.field[9-i].zone = Zone.GRAVEYARD
+        l = len(p2.field)
+        counter = 0
+        for i in range(l):
+
+            try:
+                print(">>> FIELDP2: ",implemented_cards.index(p2.field[counter]),p2.field[counter])
+                counter += 1
+            except:
+                p2.field[counter].zone = Zone.GRAVEYARD
+            
+            if (p2.field[counter].type == 6):
+                p2.field[counter].zone = Zone.GRAVEYARD
             
         return env_setup.get_observations(p1,p2)
         

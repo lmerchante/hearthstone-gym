@@ -139,10 +139,9 @@ for id in sorted(cards.db):
     # Card id -> CFM_621 & BT_203
     if card.id == "CFM_621":
         implemented = False
-    if card.id == "BT_203":
+    if card.id == "BT_203": # The secret stays afer use
         implemented = False
-    if card.id == "NEW1_038":
-        implemented = False
+
 
     color = GREEN if implemented else RED
     name = color + "%s: %s" % (PREFIXES[color], card.name) + ENDC
