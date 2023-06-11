@@ -633,19 +633,31 @@ class HearthstoneUnnestedEnv(gym.Env):
 
         ## When a card is deleted from the the hand or field lists, the indexes change
         # I needed to save the indexes or iterate the list from end to begining
+        implemented = False
+        not_enchantment = False
+        
         l = len(p1.hand)
         counter = 0
         for i in range(l):
 
             try:
                 print(">>> HANDP1: ",implemented_cards.index(p1.hand[counter]),p1.hand[counter])
-                counter += 1
+                implemented = True
+
             except:
-                p1.hand[counter].zone = Zone.GRAVEYARD     
+                p1.hand[counter].zone = Zone.GRAVEYARD  
+                implemented = False   
 
             ## check if something is an enchantment
             if(p1.hand[counter].type == 6):
                 p1.hand[counter].zone = Zone.GRAVEYARD
+                not_enchantment = False
+            else:
+                not_enchantment = True
+
+            if(implemented and not_enchantment):
+                counter += 1
+
 
         l = len(p1.field)
         counter = 0
@@ -653,13 +665,20 @@ class HearthstoneUnnestedEnv(gym.Env):
 
             try:
                 print(">>> FIELDP1: ",implemented_cards.index(p1.field[counter]),p1.field[counter])
-                counter += 1
+                implemented = True
             except:
                 p1.field[counter].zone = Zone.GRAVEYARD
+                implemented = False
+
             
             if (p1.field[counter].type == 6):
                 p1.field[counter].zone = Zone.GRAVEYARD
-            
+                not_enchantment = False
+            else:
+                not_enchantment = True
+
+            if(implemented and not_enchantment):
+                counter += 1
 
 
         ## Repeat the process for the opponent
@@ -669,12 +688,19 @@ class HearthstoneUnnestedEnv(gym.Env):
 
             try:
                 print(">>> HANDP2: ",implemented_cards.index(p2.hand[counter]), p2.hand[counter])
-                counter += 1
+                implemented = True
             except:
                 p2.hand[counter].zone = Zone.GRAVEYARD
+                implemented = False
             
             if (p2.hand[counter].type == 6):
                 p2.hand[counter].zone = Zone.GRAVEYARD
+                not_enchantment = False
+            else:
+                not_enchantment = True
+
+            if (implemented and not_enchantment):
+                counter += 1
 
         l = len(p2.field)
         counter = 0
@@ -682,12 +708,19 @@ class HearthstoneUnnestedEnv(gym.Env):
 
             try:
                 print(">>> FIELDP2: ",implemented_cards.index(p2.field[counter]),p2.field[counter])
-                counter += 1
+                implemented = True
             except:
                 p2.field[counter].zone = Zone.GRAVEYARD
+                implemented = False
             
             if (p2.field[counter].type == 6):
                 p2.field[counter].zone = Zone.GRAVEYARD
+                not_enchantment = False
+            else:
+                not_enchantment = True
+
+            if (implemented and not_enchantment):
+                counter += 1
             
         return env_setup.get_observations(p1,p2)
         
