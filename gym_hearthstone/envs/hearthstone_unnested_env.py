@@ -525,6 +525,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         """
         agent_action = None
 
+
         if (action == 0 and dict_moves["choice"]):
             agent_action = random.choice(dict_moves["choice"])
         elif (action == 1 and dict_moves["play_card"]):
@@ -538,6 +539,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         elif (action == 5 and dict_moves["end_turn"]):
             agent_action = random.choice(dict_moves["end_turn"])
        
+    
         if(agent_action):
             return agent_action, 1
         else:
@@ -644,7 +646,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                 print(">>> HANDP1: ",implemented_cards.index(p1.hand[counter]),p1.hand[counter])
                 implemented = True
 
-            except:
+            except Exception as CardNotImplemented:
                 p1.hand[counter].zone = Zone.GRAVEYARD  
                 implemented = False   
 
@@ -666,7 +668,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             try:
                 print(">>> FIELDP1: ",implemented_cards.index(p1.field[counter]),p1.field[counter])
                 implemented = True
-            except:
+            except Exception as CardNotImplemented:
                 p1.field[counter].zone = Zone.GRAVEYARD
                 implemented = False
 
@@ -689,7 +691,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             try:
                 print(">>> HANDP2: ",implemented_cards.index(p2.hand[counter]), p2.hand[counter])
                 implemented = True
-            except:
+            except Exception as CardNotImplemented:
                 p2.hand[counter].zone = Zone.GRAVEYARD
                 implemented = False
             
@@ -709,7 +711,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             try:
                 print(">>> FIELDP2: ",implemented_cards.index(p2.field[counter]),p2.field[counter])
                 implemented = True
-            except:
+            except Exception as CardNotImplemented:
                 p2.field[counter].zone = Zone.GRAVEYARD
                 implemented = False
             
