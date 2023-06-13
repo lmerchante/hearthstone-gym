@@ -348,7 +348,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                                 print("The action in the selected actions is not in possible actions!!!")
                         print(">>> After Possible_actions for random Opponent {}:{}".format(len(possible_actions),possible_actions))
                         action=random.choice(possible_actions) #and pick a random one
-                        print(">>> PLAYER: RandomOpponent  SELECTED ACTION {}".format(agent_action))
+                        print(">>> PLAYER: RandomOpponent  SELECTED ACTION {}".format(action))
                 print("")
                 print(">>> Doing end turn for random Opponent")
                 print(">>> Doing action: {}".format(action))
@@ -398,6 +398,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                 hero = current_player.hero
                 hero.attack(hero.targets[move[2]])
             elif move[0] == Move.choice:
+                print("PLAYER :" + str(current_player) + " HAS CHOSEN OPTION: " +str(current_player.choice.cards[move[1]]))
                 current_player.choice.choose(current_player.choice.cards[move[1]])
         except exceptions.GameOver:
             return True
@@ -649,7 +650,8 @@ class HearthstoneUnnestedEnv(gym.Env):
                 continue
 
             ## check if something is an enchantment
-            if(p1.hand[counter].type == 6):
+            if(p1.hand[counter].type == 6): 
+                print(">>> HANDP1 DISCARDING ENCHANTMENT: ",  p1.hand[counter])
                 p1.hand[counter].zone = Zone.GRAVEYARD
                 continue
 
@@ -661,7 +663,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         for i in range(l):
 
             try:
-                print(">>> FIELDP1 NOT IMPLEMENTED: ",implemented_cards.index(p1.field[counter]),p1.field[counter])
+                print(">>> FIELDP1: ",implemented_cards.index(p1.field[counter]),p1.field[counter])
             except Exception as CardNotImplemented:
                 print(">>> FIELDP1 NOT IMPLEMENTED: ",  p1.field[counter])
                 p1.field[counter].zone = Zone.GRAVEYARD
@@ -669,6 +671,7 @@ class HearthstoneUnnestedEnv(gym.Env):
 
             
             if (p1.field[counter].type == 6):
+                print(">>> FIELDP1 DISCARDING ENCHANTMENT: ",  p1.field[counter])
                 p1.field[counter].zone = Zone.GRAVEYARD
                 continue
 
@@ -688,6 +691,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                 continue
             
             if (p2.hand[counter].type == 6):
+                print(">>> HANDP2 DISCARDING ENCHANTMENT: ",  p2.hand[counter])
                 p2.hand[counter].zone = Zone.GRAVEYARD
                 continue
 
@@ -705,6 +709,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                 continue
             
             if (p2.field[counter].type == 6):
+                print(">>> FIELDP2 DISCARDING ENCHANTMENT: ",  p2.field[counter])
                 p2.field[counter].zone = Zone.GRAVEYARD
                 continue
 
