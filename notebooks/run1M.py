@@ -1,15 +1,6 @@
-import hearthstone_data
-import numpy as np
-import gymnasium as gym
-import random
-import imageio
+
 import os
-import tqdm
 import time
-import pickle
-from tqdm.notebook import tqdm
-import stable_baselines3
-import fireplace
 import sys #-- lo he necesitado para importar el paquete
 sys.path.append('..')
 import gymnasium as gym
@@ -25,7 +16,7 @@ env = gym.make('Hearthstone-v1', action_type = "type", reward_mode = "complex")
 
 steps = 100000
 reply_batch_size=1
-run = "luis"
+run = "jesus"
 env.reset_stats()
 start = time.time()
 env.reset()

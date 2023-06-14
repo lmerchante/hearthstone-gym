@@ -1,36 +1,24 @@
-import hearthstone_data
-import numpy as np
 import gymnasium as gym
-import random
-import imageio
 import os
-import tqdm
 import time
-import pickle
-from tqdm.notebook import tqdm
-import stable_baselines3
-import fireplace
 import sys #-- lo he necesitado para importar el paquete
 sys.path.append('..')
-import gymnasium as gym
 import gym_hearthstone
 from stable_baselines3 import DQN
 
 
-import time
-import os
 print(os.getpid())
 
 env = gym.make('Hearthstone-v1', action_type = "random", reward_mode = "simple")
 
 reply_batch_size=1
 steps = 100000
-run = "luis_rnd"
+run = "jesus_rnd"
 env.reset_stats()
 start = time.time()
 env.reset()
 
-model = DQN("MultiInputPolicy", env, batch_size=reply_batch_size, policy_kwargs={"normalize_images":False} ,verbose=0)
+model = DQN("MultiInputPolicy", env, batch_size=reply_batch_size ,verbose=1)
 model.learn(total_timesteps=steps, log_interval=4)
 
 end = time.time()
