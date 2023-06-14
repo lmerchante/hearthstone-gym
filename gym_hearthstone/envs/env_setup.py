@@ -186,7 +186,7 @@ def get_observations(p1, p2):
         "oppweapondur": p2.weapon.durability if p2.weapon else 0, 
         "myheropoweravail": p1.hero.power.is_usable() * 1,
         "myunusedmanacrystals": p1.mana,
-        "myusedmanacrystals": p1.max_mana-p1.mana if p1.mana <= p1.max_mana else p1.mana,
+        "myusedmanacrystals": p1.max_mana-p1.mana if p1.mana <= p1.max_mana else 0,
         "oppcrystals": p2.max_mana,
         "mynumcardsinhand": len(p1.hand),
         "oppnumcardsinhand": len(p2.hand),
