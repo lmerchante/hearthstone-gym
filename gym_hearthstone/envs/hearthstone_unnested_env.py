@@ -130,6 +130,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         heroes.remove(CardClass.DEATHKNIGHT)
         heroes.remove(CardClass.DEMONHUNTER)
         self.curr_step = 0
+        self.bot_rnd_loop = False
         self.reward_dict[self.curr_episode] = 0
         while True:
             try:
@@ -241,11 +242,13 @@ class HearthstoneUnnestedEnv(gym.Env):
             self.games_outcome.append(1)
             terminated = True
 
-        if self.curr_step > self.max_steps:
+        ## Game is set to Terminated when Loops are found
+        if self.curr_step > self.max_steps or self.bot_rnd_loop == True:
             self.curr_episode += 1
             self.errors += 1
             self.games_outcome.append(-999)
             terminated = True
+
             
         ob=self._get_state()
 
@@ -317,6 +320,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         if agent_action:  
             print(">>> PLAYER: RL ACTION SELECTED")
             if agent_action[0] == Move.end_turn:
+                steps_rnd = 0
                 print(">>> Doing end turn for RL Agent")
                 self.__doMove(agent_action)
                 self.alreadySelectedActions=[]
@@ -329,7 +333,12 @@ class HearthstoneUnnestedEnv(gym.Env):
                     print(">>> Possible_actions random Opponent {}:{}".format(len(possible_actions),possible_actions))
                     action = random.choice(possible_actions) #pick a random one
                     print(">>> PLAYER: RandomOpponent  SELECTED ACTION {}".format(agent_action))
-                    while action[0] != Move.end_turn: #if it's not end turn
+
+                    ## Random agent Loop
+                    # Doesn't stop until it chooses end_turn action
+                    # OR if it gets in an infinite loop (steps > 400)
+                    while action[0] != Move.end_turn and steps_rnd < 400: #if it's not end turn
+                        steps_rnd += 1
                         print(">>> Doing single turn for random Opponent")
                         print(">>> Doing action: {}".format(action))
                         self.alreadySelectedActions.append(action)
@@ -349,13 +358,18 @@ class HearthstoneUnnestedEnv(gym.Env):
                         print(">>> After Possible_actions for random Opponent {}:{}".format(len(possible_actions),possible_actions))
                         action=random.choice(possible_actions) #and pick a random one
                         print(">>> PLAYER: RandomOpponent  SELECTED ACTION {}".format(action))
-                print("")
-                print(">>> Doing end turn for random Opponent")
-                print(">>> Doing action: {}".format(action))
-                # Game is not over
-                if(self.game.player1.hero.health > 0 or self.game.player2.hero.health > 0):
-                    self.__doMove(action) #end random player's turn
-                self.alreadySelectedActions=[]
+                
+                ##
+                if (steps_rnd < 400):
+                    print("")
+                    print(">>> Doing end turn for random Opponent")
+                    print(">>> Doing action: {}".format(action))
+                    # Game is not over
+                    if(self.game.player1.hero.health > 0 or self.game.player2.hero.health > 0):
+                        self.__doMove(action) #end random player's turn
+                    self.alreadySelectedActions=[]
+                else:
+                    self.bot_rnd_loop = True
             else: #otherwise we just do the single AI action and keep track so its not used again
                 print(">>> Doing single action for RL Agent"+str(agent_action))
                 self.__doMove(agent_action)
