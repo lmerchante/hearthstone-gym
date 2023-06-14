@@ -25,8 +25,10 @@ wheels/
 .installed.cfg
 *.egg
 notebooks/dqn_models/
-notebooks/run1M.py
-notebooks/run1M_rnd.py
+notebooks/*.py
+notebooks/*.zip
+notebooks/metrics/
+notebooks/reward_data/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

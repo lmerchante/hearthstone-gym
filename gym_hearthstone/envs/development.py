@@ -260,17 +260,74 @@ def _map_action(self, action, dict_moves, possible_actions):
 
 # If I understand how the actions are mapped in fireplace I might not need to do all this checking
 # I think fireplace checks that internally
-def map_action_heropower(action, agent_action, dict_moves):
+def map_action_heropower(action, dict_moves, game):
+
     hpw_actions = dict_moves["heropower"]
+    ## Hero power without targets
     if action == 2:
         if(len(hpw_actions == 1) and hpw_actions[0][2] == None):
-            agent_action = hpw_actions[0]
-    # check if heropower has been used ( or if it is available)
+            return hpw_actions[0]
+    else:
+        targets = game.current_player.hero.power.targets
 
-    # check if there is mana to use it 
 
+    field1_len = len(game.current_player.field)
+    #field2_len = len(game.current_player.field) opponent_player
 
-    # if heropower needs target
-        # if targeting a minion check len of field
+    ## Hero power targeting own hero
+    if action == 3 and targets[0].type == 3:
+        return hpw_actions[0]
+        
+    ## Hero power targeting own field 1 - 7
+    elif action == 4 and field1_len > 0:
+        return hpw_actions[1]
+    
+    elif action == 5 and field1_len > 1:
+        return hpw_actions[2]
+    
+    elif action == 6 and field1_len > 2:
+        return hpw_actions[3]
+    
+    elif action == 7 and field1_len > 3:
+        return hpw_actions[4]
+    
+    elif action == 8 and field1_len > 4:
+        return hpw_actions[5]
+
+    elif action == 9 and field1_len > 5:
+        return hpw_actions[6]
+
+    elif action == 10 and field1_len > 6:
+        return hpw_actions[7]
+    
+    ## Hero power targeting opp hero
+    elif action == 11 and targets[field1_len + 1].type == 3:
+        return hpw_actions[field1_len + 1]
+    
+    # Hero power targeting opp field 1 - 7
+    elif action == 12 and field2_len > 0:
+        return hpw_actions[field1_len + 2]
+
+    elif action == 13 and field2_len > 1:
+        return hpw_actions[field1_len + 3]
+
+    elif action == 14 and field2_len > 2:
+        return hpw_actions[field1_len + 4]
+
+    elif action == 15 and field2_len > 3:
+        return hpw_actions[field1_len + 5]
+
+    elif action == 16 and field2_len > 4:
+        return hpw_actions[field1_len + 6]
+
+    elif action == 17 and field2_len > 5:
+        return hpw_actions[field1_len + 7]
+
+    elif action == 18 and field2_len > 6:
+        return hpw_actions[field1_len + 8]
+
+    else:
+        return None
+
 
 

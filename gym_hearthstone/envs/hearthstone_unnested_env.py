@@ -73,7 +73,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         self.tot_step = 0
         self.curr_step = -1
         self.curr_episode=0
-        self.max_steps = 400
+        self.max_steps = 1000
         self.wins = 0
         self.ties = 0
         self.losses = 0
@@ -81,6 +81,8 @@ class HearthstoneUnnestedEnv(gym.Env):
         self.errors = 0
         self.action_episode_memory=[]
         self.alreadySelectedActions=[]
+        self.bot_rnd_loop = False
+        self.attribute_error = False
         self.setup_game()
 
     def reset(self):
@@ -131,6 +133,7 @@ class HearthstoneUnnestedEnv(gym.Env):
         heroes.remove(CardClass.DEMONHUNTER)
         self.curr_step = 0
         self.bot_rnd_loop = False
+        self.attribute_error = False
         self.reward_dict[self.curr_episode] = 0
         while True:
             try:
@@ -218,13 +221,40 @@ class HearthstoneUnnestedEnv(gym.Env):
         print("------------------------------------------")
 
         ## If there is an error during the step logic we will reset the env.
-        # try:
-        self._take_action(action)
+        # Take the action of the RL agent
+        try:
+            self._take_action(action)
+        except AttributeError as e:
+            self.attribute_error = True
+            data_file = open('AttributeError.txt', 'a')
+            data_file.write("New Error \n")
+            data_file.write("--------------------------------------------")
+            data_file.write(str(e))
+            data_file.write("\n")
+            data_file.write("\n")
+            data_file.write("\n")
 
         terminated = False
         reward=self._get_reward()
         self.total_reward += reward
         self.reward_dict[self.curr_episode] += reward
+
+        ## Get new observation
+        try:
+            ob = self._get_state()
+        except AttributeError as e:
+            self.attribute_error = True
+            data_file = open('AttributeError.txt', 'a')
+            data_file.write("New Error \n")
+            data_file.write("--------------------------------------------")
+            data_file.write(str(e))
+            data_file.write("\n")
+            data_file.write("\n")
+            data_file.write("\n")
+            # Get a random observation not to trigger an error
+            ob = self.observation_space.sample()
+
+
         ## change episode count each time the game finishes
         if (self.game.player1.hero.health < 1 and self.game.player2.hero.health < 1):
             self.curr_episode += 1
@@ -243,47 +273,15 @@ class HearthstoneUnnestedEnv(gym.Env):
             terminated = True
 
         ## Game is set to Terminated when Loops are found
-        if self.curr_step > self.max_steps or self.bot_rnd_loop == True:
+        if self.curr_step > self.max_steps or self.bot_rnd_loop == True or self.attribute_error == True:
             self.curr_episode += 1
             self.errors += 1
             self.games_outcome.append(-999)
             terminated = True
 
-            
-        ob=self._get_state()
 
-        ## trubleshooting Error Num_classses
-        #try:
-        #    env_setup.preprocess_obs(ob)
-        #except Exception as e:
-        #     print(e)
-        #     data_file = open('PreprocessError.txt', 'w')
-        #     data_file.write("New Error \n")
-        #     data_file.write(str(e))
-        #     data_file.write("\n")
-        #     data_file.write("Print Obs and num_classes")
-        #     observation_space = env_setup.obs_space
-        #     for key, _obs in ob.items():
-        #         data_file.write(" \n \n Lopping through keys -- Current key: " + str(key))
-        #         data_file.write("observation : " + str(_obs) )
-        #         data_file.write("num_classes : " +
-        #                         str(observation_space[key].n))
-        #        
-        #     data_file.write("\n \n")
-        #     data_file.close()
-        #
-        #     self.errors += 1
-        #     terminated = True
-        #     ob = self.reset()   
-        #     reward = 0
-        #     return ob, reward, terminated, {}
         return ob, reward, terminated, {}
-        # except:
-        #     self.errors += 1 
-        #     terminated = True
-        #     ob = self.reset()
-        #     reward = 0
-        #     return ob, reward, terminated, {}
+
 
     def _take_action(self, action):
         """
@@ -337,7 +335,7 @@ class HearthstoneUnnestedEnv(gym.Env):
                     ## Random agent Loop
                     # Doesn't stop until it chooses end_turn action
                     # OR if it gets in an infinite loop (steps > 400)
-                    while action[0] != Move.end_turn and steps_rnd < 400: #if it's not end turn
+                    while action[0] != Move.end_turn and steps_rnd < 200: #if it's not end turn
                         steps_rnd += 1
                         print(">>> Doing single turn for random Opponent")
                         print(">>> Doing action: {}".format(action))
