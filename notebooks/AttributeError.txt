@@ -3,6 +3,3282 @@ New Error
 
 
 New Error 
---------------------------------------------'Enchantment' object has no attribute '_atk'
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
+
+
+New Error 
+--------------------------------------------'HearthstoneUnnestedEnv' object has no attribute 'opponent'
 
 
