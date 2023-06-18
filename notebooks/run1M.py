@@ -12,10 +12,10 @@ import time
 import os
 print(os.getpid())
 
-env = gym.make('Hearthstone-v1', action_type = "type", reward_mode = "complex")
+env = gym.make('Hearthstone-v1', action_type = "type_rd", reward_mode = "simple")
 
 steps = 100000
-reply_batch_size=1
+reply_batch_size=32
 run = "jesus"
 env.reset_stats()
 start = time.time()

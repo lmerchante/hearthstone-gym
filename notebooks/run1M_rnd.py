@@ -9,9 +9,9 @@ from stable_baselines3 import DQN
 
 print(os.getpid())
 
-env = gym.make('Hearthstone-v1', action_type = "random", reward_mode = "simple")
+env = gym.make('Hearthstone-v1', action_type = "random", reward_mode = "penalize")
 
-reply_batch_size=1
+reply_batch_size=32
 steps = 100000
 run = "jesus_rnd"
 env.reset_stats()

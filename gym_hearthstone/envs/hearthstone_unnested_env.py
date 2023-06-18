@@ -42,11 +42,17 @@ class HearthstoneUnnestedEnv(gym.Env):
             self,
             action_type = "random",
             reward_mode = "simple",
+            seed = None
                  ):
         self.__version__ = "0.2.0"
         print("HearthstoneEnv - Version {}".format(self.__version__))
 
         ## Arguments
+        self.seed = seed
+        if self.seed != None:
+            print(">>> Set seed to: ", self.seed)
+            random.seed(self.seed)
+            
         if (action_type != "type" and action_type != "type_rd"):
             self.action_type = "random"
         else:
@@ -117,6 +123,7 @@ class HearthstoneUnnestedEnv(gym.Env):
             print("Number of Win Rate: " + str(self.wins / (self.wins + self.losses)))
         print("Total reward is: " + str(self.total_reward))
         print("----------------------------")
+        return self.tot_step, self.curr_episode, self.wins, self.losses, self.ties, self.errors, self.total_reward
     
     def setup_game(self):
         """

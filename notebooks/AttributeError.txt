@@ -2,3 +2,7 @@ New Error
 --------------------------------------------'Enchantment' object has no attribute 'health'
 
 
+New Error 
+--------------------------------------------'Enchantment' object has no attribute '_atk'
+
+
