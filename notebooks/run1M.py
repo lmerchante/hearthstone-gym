@@ -12,11 +12,11 @@ import time
 import os
 print(os.getpid())
 
-env = gym.make('Hearthstone-v1', action_type = "type", reward_mode = "complex", decks = "classic", opponent_model = "random")
+env = gym.make('Hearthstone-v1', action_type = "type", reward_mode = "complex", decks = "classic", opponent_model = "dqn_1k")
 
-steps = 100000
+steps = 1000
 reply_batch_size=1
-run = "jesus_type-rnd_100k"
+run = "jesus_1000_type-model_1k"
 env.reset_stats()
 start = time.time()
 env.reset()
@@ -72,6 +72,6 @@ data_file.close()
 #env.close()
 
 
-model.save("dqn_100k")
+model.save("dqn_10k")
 
 env.close()

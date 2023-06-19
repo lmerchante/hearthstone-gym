@@ -85,6 +85,8 @@ class HearthstoneUnnestedEnv(gym.Env):
                 self.opponent = "model"
             except FileNotFoundError:
                 self.opponent = "random"
+        else:
+            self.opponent = "random"
         
         # store training data
         self.reward_dict = {}
@@ -607,19 +609,36 @@ class HearthstoneUnnestedEnv(gym.Env):
     def model_agent_turn(self):
         # get the random player's actions
         possible_actions, dict_moves = self.__getMoves()
-        print(">>> Possible_actions random Opponent {}:{}".format(len(possible_actions),possible_actions))
+        print(">>> Possible_actions Agent Opponent {}:{}".format(len(possible_actions),possible_actions))
         opp_obs = self._get_opp_obs()
-        action = self.opp_model.predict(opp_obs)
-        opp_agent_action = self._map_type_action(action, dict_moves, possible_actions)
-
+        action = self.opp_model.predict(opp_obs)[0]
+        print(
+            ">>> PLAYER: AgentOpponent  SELECTED ACTION {}".format(action))
+        opp_agent_action = self._map_type_action(action, dict_moves, possible_actions)[0]
+        print(
+            ">>> PLAYER: AgentOpponent  MAPPED ACTION {}".format(opp_agent_action))
 
         while opp_agent_action == None or opp_agent_action[0] != Move.end_turn:
+            
             if opp_agent_action:
+                print(
+                ">>> PLAYER: AgentOpponent  DOING ACTION {}".format(opp_agent_action))
                 self.__doMove(opp_agent_action)
+
+            # When the opp agent wins or losses the while breaks
+            if (self.game.player1.hero.health <= 0 or self.game.player2.hero.health <= 0):
+                break
+
             opp_obs = self._get_opp_obs()
-            action = self.opp_model.predict(opp_obs)
+            action = self.opp_model.predict(opp_obs)[0]
+            print(
+                ">>> PLAYER: AgentOpponent  SELECTED ACTION {}".format(action))
             possible_actions, dict_moves = self.__getMoves()
-            opp_agent_action = self._map_type_action(action, dict_moves, possible_actions)
+            
+            print(">>> Possible_actions Agent Opponent {}:{}".format(len(possible_actions),possible_actions))
+            opp_agent_action = self._map_type_action(action, dict_moves, possible_actions)[0]
+            print(
+                ">>> PLAYER: AgentOpponent  MAPPED ACTION {}".format(opp_agent_action))
         return opp_agent_action
 
 
